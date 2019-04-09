@@ -1,0 +1,5 @@
+<?php
+
+return [
+// Place here the addresses of people you want to receive email from ASAP but only in business hours
+];

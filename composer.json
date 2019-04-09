@@ -1,0 +1,13 @@
+{
+    "name": "root/inbox-pause",
+    "authors": [
+        {
+            "name": "Mauro Chojrin",
+            "email": "mauro.chojrin@leewayweb.com"
+        }
+    ],
+    "require": {
+        "google/apiclient": "^2.0",
+        "php-mime-mail-parser/php-mime-mail-parser": "^4.0"
+    }
+}
