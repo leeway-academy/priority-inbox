@@ -43,8 +43,8 @@ Face 3: Configure your environment
 4. Edit the files appropriately in order to define who/when gets access to your inbox.
 5. Create a new label in your gmail with the same name as reads in your ```hidden_label_prefix.php``` file
 6. Create a filter in your gmail account that:
-6.1. Matches: ```from:(*) label:inbox```
-6.2. Do this: Skip Inbox, Apply label "(Contents of ```hidden_label_prefix.php```)"
+ 1. Matches: ```from:(*) label:inbox```
+ 2. Do this: Skip Inbox, Apply label "(Contents of ```hidden_label_prefix.php```)"
 
 ## Usage
 
