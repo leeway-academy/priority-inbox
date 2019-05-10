@@ -81,17 +81,18 @@ function expandHomeDirectory($path)
 $client = getClient();
 $service = new Google_Service_Gmail($client);
 
-// Print the labels in the user's account.
 $user = 'me';
+
+$hiddenLabelPrefix = require_once 'hidden_label_prefix.php';
 
 try {
     $labelsResponse = $service->users_labels->listUsersLabels($user);
 
     if ( $labels = $labelsResponse->getLabels() ) {
       foreach ($labels as $label) {
-	if ( substr( $label->getName(), 0, strlen('Inbox-Paused') ) == 'Inbox-Paused' ) {
-		$inboxPausedId = trim($label->getId());
-		$inboxPausedName = $label->getName();
+	if ( substr( $label->getName(), 0, strlen($hiddenLabelPrefix) ) == $hiddenLabelPrefix ) {
+		$hiddenLabelId = trim($label->getId());
+		$hiddenLabelName = $label->getName();
 		break;
 	}
      }
@@ -100,8 +101,8 @@ try {
     die( 'An error occurred: ' . $e->getMessage() );
 }
 
-echo "Fetching messages labeled '$inboxPausedName', id: '$inboxPausedId'".PHP_EOL;
-$results = $service->users_messages->listUsersMessages($user, [ 'labelIds' => [ $inboxPausedId ] ]);
+echo "Fetching messages labeled '$hiddenLabelName', id: '$hiddenLabelId'".PHP_EOL;
+$results = $service->users_messages->listUsersMessages($user, [ 'labelIds' => [ $hiddenLabelId ] ]);
 
 $messages = $results->getMessages();
 
@@ -126,17 +127,17 @@ foreach ( $messages as $message ) {
 		if ( array_key_exists( 'a', $options ) || senderBelongs( $from, $allowedFrom ) ) {
 			echo 'Came from: '.$from.' moving to INBOX'.PHP_EOL;
 			if ( !array_key_exists('dry-run', $options) ) {
-				moveToInbox( $service, $user, $message, $inboxPausedId );
+				moveToInbox( $service, $user, $message, $hiddenLabelId );
 			}
 		}
 	}
 }
 
-function moveToInbox( Google_Service_Gmail $service, string $user, $message, string $inboxPausedId )
+function moveToInbox( Google_Service_Gmail $service, string $user, $message, string $hiddenLabelId )
 {
 	$mods = new Google_Service_Gmail_ModifyMessageRequest();
 	$mods->setAddLabelIds(['INBOX']);
-	$mods->setRemoveLabelIds( [$inboxPausedId] );
+	$mods->setRemoveLabelIds( [$hiddenLabelId] );
 	try {
 	    $message = $service->users_messages->modify($user, $message->getId(), $mods);
 	    print 'Message with ID: ' . $message->getId() . ' successfully modified.'.PHP_EOL;
