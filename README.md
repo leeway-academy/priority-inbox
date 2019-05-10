@@ -24,8 +24,8 @@ Face 1: Configure your gmail for cli access
 ===========================================
 
 1. Create your client on your Gmail account (Go [here](https://developers.google.com/gmail/api/quickstart/php) to get it)
-1.1. Enable the API
-1.2. Download the client secret to a safe place
+    1. Enable the API
+    2. Download the client secret to a safe place
  
 Face 2: Set up your server to interact with gmail
 =================================================
