@@ -32,7 +32,20 @@ Face 2: Set up your server to interact with gmail
 
 1. Install dependencies through composer (```composer install```)
 2. Run ```php fetch.php```
+3. Follow instructions as they appear :)
  
+Face 3: Configure your environment
+==================================
+
+1. Copy the file ```important_senders.php.dist``` into ```important_senders.php```
+2. Copy the file ```urgent_senders.php.dist``` into ```urgent_senders.php```
+3. Copy the file ```hidden_label_prefix.php.dist``` into ```hidden_label_prefix.php```
+4. Edit the files appropriately in order to define who/when gets access to your inbox.
+5. Create a new label in your gmail with the same name as reads in your ```hidden_label_prefix.php``` file
+6. Create a filter in your gmail account that:
+6.1. Matches: ```from:(*) label:inbox```
+6.2. Do this: Skip Inbox, Apply label "(Contents of ```hidden_label_prefix.php```)"
+
 ## Usage
 
 In order to use the application you need to issue at least one of the following modifiers:
@@ -41,13 +54,6 @@ In order to use the application you need to issue at least one of the following 
 * u: only urgent emails (```php fetch.php -u```)
 * i: only important emails (```php fetch.php -i```)
 * s: only this particular sender (```php fetch.php -s mauro.chojrin@leewayweb.com```)
-
-## Configuration
-
-1. Copy the file ```important_senders.php.dist``` into ```important_senders.php```
-2. Copy the file ```urgent_senders.php.dist``` into ```urgent_senders.php```
-
-Edit the files appropriately in order to define who/when gets access to your inbox.
 
 Setup your cronjobs
 ===================
