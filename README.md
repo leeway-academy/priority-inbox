@@ -56,7 +56,9 @@ While this script can be used on Windows (in theory at least :p), I'm more famil
 
 
 ```*/10 * * * * /usr/bin/php /root/inbox-pause/fetch.php -u```
+
 ```*/10 10-17 * * 1-5 /usr/bin/php /root/inbox-pause/fetch.php -i```
+
 ```0 12 * * 1-5 /usr/bin/php /root/inbox-pause/fetch.php -a```
 
 (This is just a sample configuration, you can tweak it to fit your particular needs)
@@ -68,3 +70,4 @@ Here are some ideas into how this project could be extended (I'm most likely not
 1. Build the configuration into a database (Nothing fancy, SQLite should do fine)
 2. Provide a GUI for the configuration/operation
 3. Create a Chrome extension to add/remove people from particular senders lists directly from GMail
+4. Bring fetching times into the script (In order to have just one cronjob instead of three).

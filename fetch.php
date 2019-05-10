@@ -111,10 +111,6 @@ $allowedFrom = array_merge( $allowedFrom, array_key_exists( 'u', $options ) ? in
 
 $parser = new PhpMimeMailParser\Parser();
 
-if ( array_key_exists('s', $options) ) {
-	$urgentSenders[] = $options['s'];
-}
-
 foreach ( $messages as $message ) {
 	if ($real_message = $service->users_messages->get(
         	$user,
