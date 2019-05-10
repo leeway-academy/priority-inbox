@@ -37,14 +37,14 @@ Face 2: Set up your server to interact with gmail
 Face 3: Configure your environment
 ==================================
 
-# Copy the file ```important_senders.php.dist``` into ```important_senders.php```
-# Copy the file ```urgent_senders.php.dist``` into ```urgent_senders.php```
-# Copy the file ```hidden_label_prefix.php.dist``` into ```hidden_label_prefix.php```
-# Edit the files appropriately in order to define who/when gets access to your inbox.
-# Create a new label in your gmail with the same name as reads in your ```hidden_label_prefix.php``` file
-# Create a filter in your gmail account that:
- - Matches: ```from:(*) label:inbox```
- - Do this: Skip Inbox, Apply label "(Contents of ```hidden_label_prefix.php```)"
+1. Copy the file ```important_senders.php.dist``` into ```important_senders.php```
+2. Copy the file ```urgent_senders.php.dist``` into ```urgent_senders.php```
+3. Copy the file ```hidden_label_prefix.php.dist``` into ```hidden_label_prefix.php```
+4. Edit the files appropriately in order to define who/when gets access to your inbox.
+5. Create a new label in your gmail with the same name as reads in your ```hidden_label_prefix.php``` file
+6. Create a filter in your gmail account that:
+    1. Matches: ```from:(*) label:inbox```
+    2. Do this: Skip Inbox, Apply label "(Contents of ```hidden_label_prefix.php```)"
 
 ## Usage
 
