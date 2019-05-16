@@ -127,10 +127,13 @@ foreach ( $messages as $message ) {
 		if ( array_key_exists( 'a', $options ) || senderBelongs( $from, $allowedFrom ) ) {
             echo 'Came from: '.$from.' moving to INBOX'.PHP_EOL;
 		    if ( !senderBelongs( $from, $allowedFrom ) ) {
-		        echo 'Sent on:'.(new DateTimeImmutable($parser->getHeader('date')))->format('d-m-Y').PHP_EOL;
+                $sentOn = new DateTimeImmutable($parser->getHeader('date'));
+                echo 'Sent on:'.$sentOn->format('d-m-Y H:i:s').PHP_EOL;
 
-                if ( !array_key_exists('dry-run', $options) ) {
+                if ( !array_key_exists('dry-run', $options) && $sentOn->diff( new DateTimeImmutable() )->h >= 5 ) {
                     moveToInbox( $service, $user, $message, $hiddenLabelId );
+                } else {
+                    echo 'Too soon be read'.PHP_EOL;
                 }
             } else {
                 if ( !array_key_exists('dry-run', $options) ) {
