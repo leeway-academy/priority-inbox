@@ -125,10 +125,18 @@ foreach ( $messages as $message ) {
 		$from = $parser->getHeader('from');
 		
 		if ( array_key_exists( 'a', $options ) || senderBelongs( $from, $allowedFrom ) ) {
-			echo 'Came from: '.$from.' moving to INBOX'.PHP_EOL;
-			if ( !array_key_exists('dry-run', $options) ) {
-				moveToInbox( $service, $user, $message, $hiddenLabelId );
-			}
+            echo 'Came from: '.$from.' moving to INBOX'.PHP_EOL;
+		    if ( !senderBelongs( $from, $allowedFrom ) ) {
+		        echo 'Sent on:'.(new DateTimeImmutable($parser->getHeader('date')))->format('d-m-Y').PHP_EOL;
+
+                if ( !array_key_exists('dry-run', $options) ) {
+                    moveToInbox( $service, $user, $message, $hiddenLabelId );
+                }
+            } else {
+                if ( !array_key_exists('dry-run', $options) ) {
+                    moveToInbox( $service, $user, $message, $hiddenLabelId );
+                }
+            }
 		}
 	}
 }
