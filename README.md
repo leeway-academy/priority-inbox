@@ -51,9 +51,10 @@ Face 3: Configure your environment
 In order to use the application you need to issue at least one of the following modifiers:
 
 * a: Pop email for every possible sender (```php fetch.php -a```)
-* u: only urgent emails (```php fetch.php -u```)
-* i: only important emails (```php fetch.php -i```)
-* s: only this particular sender (```php fetch.php -s mauro.chojrin@leewayweb.com```)
+* u: Fetch emails sent by people in urgent_senders.php (```php fetch.php -u```)
+* i: Fetch emails sent by people in important_senders.php (```php fetch.php -i```)
+* s: Fetch emails from this particular sender (```php fetch.php -s mauro.chojrin@leewayweb.com```)
+* m: Fetch emails sent within more than X hours from now, to be used together with -a (```php fetch.php -am 5```)
 
 Setup your cronjobs
 ===================
@@ -65,7 +66,7 @@ While this script can be used on Windows (in theory at least :p), I'm more famil
 
 ```*/10 10-17 * * 1-5 /usr/bin/php /root/inbox-pause/fetch.php -i```
 
-```0 12 * * 1-5 /usr/bin/php /root/inbox-pause/fetch.php -a```
+```0 11-16 * * 1-5 /usr/bin/php /root/inbox-pause/fetch.php -am 5```
 
 (This is just a sample configuration, you can tweak it to fit your particular needs)
 
