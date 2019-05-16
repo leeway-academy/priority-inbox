@@ -3,7 +3,9 @@
 <?php
 require_once __DIR__ . '/vendor/autoload.php';
 
-$options = getopt('iuas:', [ 'dry-run' ]);
+$options = getopt('iuas:m:', [ 'dry-run' ]);
+
+$minDelay = array_key_exists($options['m']) ? $options['m'] : 0;
 
 define('APPLICATION_NAME', 'Gmail API PHP Quickstart');
 define('CREDENTIALS_PATH', __DIR__.'/credentials.json');
@@ -112,6 +114,7 @@ $allowedFrom = array_merge( $allowedFrom, array_key_exists( 'u', $options ) ? in
 
 $parser = new PhpMimeMailParser\Parser();
 
+echo 'Found '.count($messages).' messages'.PHP_EOL;
 foreach ( $messages as $message ) {
 	if ($real_message = $service->users_messages->get(
         	$user,
@@ -130,7 +133,7 @@ foreach ( $messages as $message ) {
                 $sentOn = new DateTimeImmutable($parser->getHeader('date'));
                 echo 'Sent on:'.$sentOn->format('d-m-Y H:i:s').PHP_EOL;
 
-                if ( !array_key_exists('dry-run', $options) && $sentOn->diff( new DateTimeImmutable() )->h >= 5 ) {
+                if ( !array_key_exists('dry-run', $options) && $sentOn->diff( new DateTimeImmutable() )->h >= $minDelay) {
                     moveToInbox( $service, $user, $message, $hiddenLabelId );
                 } else {
                     echo 'Too soon be read'.PHP_EOL;
