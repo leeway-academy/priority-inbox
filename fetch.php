@@ -103,7 +103,7 @@ try {
     die( 'An error occurred: ' . $e->getMessage() );
 }
 
-echo "Fetching messages labeled '$hiddenLabelName', id: '$hiddenLabelId'".PHP_EOL;
+echo "Fetching messages labeled '$hiddenLabelName', id: '$hiddenLabelId'. Options received: ".implode( ',', $options ).PHP_EOL;
 $results = $service->users_messages->listUsersMessages($user, [ 'labelIds' => [ $hiddenLabelId ] ]);
 
 $messages = $results->getMessages();
