@@ -128,27 +128,28 @@ foreach ( $messages as $message ) {
 		$from = $parser->getHeader('from');
 		
 		if ( array_key_exists( 'a', $options ) || senderBelongs( $from, $allowedFrom ) ) {
-            echo 'Came from: '.$from.' moving to INBOX'.PHP_EOL;
-		    if ( !senderBelongs( $from, $allowedFrom ) ) {
-                $sentOn = new DateTimeImmutable($parser->getHeader('date'));
-                echo 'Sent on:'.$sentOn->format('d-m-Y H:i:s').PHP_EOL;
+		    echo 'Came from: '.$from.' moving to INBOX'.PHP_EOL;
+		    if ( !senderBelongs( $from, $allowedFrom ) && array_key_exists( 'a', $options ) ) {
+			$sentOn = new DateTimeImmutable($parser->getHeader('date'));
+			echo 'Sent on:'.$sentOn->format('d-m-Y H:i:s').PHP_EOL;
 
-                if ( !array_key_exists('dry-run', $options) && $sentOn->diff( new DateTimeImmutable() )->h >= $minDelay) {
-                    moveToInbox( $service, $user, $message, $hiddenLabelId );
-                } else {
-                    echo 'Too soon be read'.PHP_EOL;
-                }
-            } else {
-                if ( !array_key_exists('dry-run', $options) ) {
-                    moveToInbox( $service, $user, $message, $hiddenLabelId );
-                }
-            }
+			if ( !array_key_exists('dry-run', $options) && $sentOn->diff( new DateTimeImmutable() )->h >= $minDelay) {
+			    moveToInbox( $service, $user, $message, $hiddenLabelId );
+			} else {
+			    echo 'Too soon be read'.PHP_EOL;
+			}
+		    } else {
+			if ( !array_key_exists('dry-run', $options) ) {
+			    moveToInbox( $service, $user, $message, $hiddenLabelId );
+			}
+		    }
 		}
 	}
 }
 
 function moveToInbox( Google_Service_Gmail $service, string $user, $message, string $hiddenLabelId )
 {
+	echo 'Moving to Inbox'.PHP_EOL;
 	$mods = new Google_Service_Gmail_ModifyMessageRequest();
 	$mods->setAddLabelIds(['INBOX']);
 	$mods->setRemoveLabelIds( [$hiddenLabelId] );
