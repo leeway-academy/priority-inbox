@@ -5,7 +5,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 $options = getopt('iuas:m:', [ 'dry-run' ]);
 
-$minDelay = array_key_exists($options['m']) ? $options['m'] : 0;
+$minDelay = array_key_exists('m', $options) ? $options['m'] : 0;
 
 define('APPLICATION_NAME', 'Gmail API PHP Quickstart');
 define('CREDENTIALS_PATH', __DIR__.'/credentials.json');
@@ -103,7 +103,7 @@ try {
     die( 'An error occurred: ' . $e->getMessage() );
 }
 
-echo "Fetching messages labeled '$hiddenLabelName', id: '$hiddenLabelId'. Options received: ".implode( ',', $options ).PHP_EOL;
+echo "Fetching messages labeled '$hiddenLabelName', id: '$hiddenLabelId'. Options received: ".implode( ', ', array_keys( $options ) ).PHP_EOL;
 $results = $service->users_messages->listUsersMessages($user, [ 'labelIds' => [ $hiddenLabelId ] ]);
 
 $messages = $results->getMessages();
@@ -127,22 +127,14 @@ foreach ( $messages as $message ) {
 		$parser->setText($real_message);
 		$from = $parser->getHeader('from');
 		
-		if ( array_key_exists( 'a', $options ) || senderBelongs( $from, $allowedFrom ) ) {
-		    echo 'Came from: '.$from.' moving to INBOX'.PHP_EOL;
-		    if ( !senderBelongs( $from, $allowedFrom ) && array_key_exists( 'a', $options ) ) {
-			$sentOn = new DateTimeImmutable($parser->getHeader('date'));
-			echo 'Sent on:'.$sentOn->format('d-m-Y H:i:s').PHP_EOL;
+		echo 'Came from: '.$from.PHP_EOL;
+		$sentOn = new DateTimeImmutable($parser->getHeader('date'));
+		echo 'Sent on: '.$sentOn->format('d-m-Y H:i:s').PHP_EOL;
 
-			if ( !array_key_exists('dry-run', $options) && $sentOn->diff( new DateTimeImmutable() )->h >= $minDelay) {
-			    moveToInbox( $service, $user, $message, $hiddenLabelId );
-			} else {
-			    echo 'Too soon be read'.PHP_EOL;
-			}
-		    } else {
-			if ( !array_key_exists('dry-run', $options) ) {
+		if ( ( array_key_exists( 'a', $options ) && $sentOn->diff( new DateTimeImmutable() )->h >= $minDelay ) || senderBelongs( $from, $allowedFrom ) ) {
+			if ( !array_key_exists('dry-run', $options ) ) {
 			    moveToInbox( $service, $user, $message, $hiddenLabelId );
 			}
-		    }
 		}
 	}
 }
