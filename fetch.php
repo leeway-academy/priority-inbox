@@ -112,6 +112,7 @@ $allowedFrom = array_key_exists('s', $options) ? [ $options['s'] ] : [];
 $allowedFrom = array_merge( $allowedFrom, array_key_exists( 'i', $options ) ? include __DIR__.'/important_senders.php' : [] );
 $allowedFrom = array_merge( $allowedFrom, array_key_exists( 'u', $options ) ? include __DIR__.'/urgent_senders.php' : [] );
 
+echo 'allowedFrom = '.implode(', ', $allowedFrom).PHP_EOL;
 $parser = new PhpMimeMailParser\Parser();
 
 echo 'Found '.count($messages).' messages'.PHP_EOL;
@@ -127,11 +128,13 @@ foreach ( $messages as $message ) {
 		$parser->setText($real_message);
 		$from = $parser->getHeader('from');
 		
-		echo 'Came from: '.$from.PHP_EOL;
-		$sentOn = new DateTimeImmutable($parser->getHeader('date'));
-		echo 'Sent on: '.$sentOn->format('d-m-Y H:i:s').PHP_EOL;
+		$d = $parser->getHeader('date');
+		$sentOn = new DateTimeImmutable($d);
+		echo 'Came from: '.$from.'. Date: '.$d.PHP_EOL;
+		$rightNow = new DateTimeImmutable( 'now', $sentOn->getTimeZone() );
+		$elapsed = $rightNow->diff( $sentOn, true )->h;
 
-		if ( ( array_key_exists( 'a', $options ) && $sentOn->diff( new DateTimeImmutable() )->h >= $minDelay ) || senderBelongs( $from, $allowedFrom ) ) {
+		if ( ( array_key_exists( 'a', $options ) && $elapsed >= $minDelay ) || senderBelongs( $from, $allowedFrom ) ) {
 			if ( !array_key_exists('dry-run', $options ) ) {
 			    moveToInbox( $service, $user, $message, $hiddenLabelId );
 			}
