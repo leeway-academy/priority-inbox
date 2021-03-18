@@ -80,7 +80,11 @@ foreach ($messages as $message) {
         $from = $parser->getHeader('from');
 
         $d = $parser->getHeader('date');
-        $sentOn = new DateTimeImmutable($d);
+        try {
+		$sentOn = new DateTimeImmutable($d);
+	} catch ( Exception $e ) {
+		$sentOn = (new DateTimeImmutable())->sub( new DateInterval("PT".($minDelay + 1)."H") );
+	}
         echo 'Came from: ' . $from . '. Date: ' . $d . PHP_EOL;
         $rightNow = new DateTimeImmutable('now', $sentOn->getTimeZone());
         $elapsed = $rightNow->diff($sentOn, true)->h;
@@ -110,7 +114,7 @@ function moveToInbox(Google_Service_Gmail $service, string $user, $message, stri
 function senderBelongs(string $from, array $importantSenders): bool
 {
     foreach ($importantSenders as $importantSender) {
-        if (strpos($from, $importantSender) !== false) {
+        if ($importantSender && (strpos($from, $importantSender) !== false)) {
 
             return true;
         }

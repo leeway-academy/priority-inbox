@@ -5,3 +5,5 @@ credentials.json
 vendor/
 hidden_label_prefix.php
 .idea/
+*.txt
+*.log
