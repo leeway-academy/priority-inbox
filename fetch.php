@@ -21,6 +21,7 @@ $options = getopt('b:w:m:', ['dry-run']);
 $minDelay = array_key_exists('m', $options) ? $options['m'] : 0;
 $whitelistEntries = array_key_exists('w', $options) ? (is_array($options['w']) ? $options['w'] : [$options['w']]) : [];
 $blacklistEntries = array_key_exists('b', $options) ? (is_array($options['b']) ? $options['b'] : [$options['b']]) : [];
+$importantKeyword = array_key_exists('k', $options) ? (is_array($options['k']) ? $options['k'] : [$options['k']]) : [];
 
 $allowedFrom = getEmailsFromList($whitelistEntries);
 $notAllowedFrom = getEmailsFromList($blacklistEntries);
@@ -81,15 +82,19 @@ foreach ($messages as $message) {
 
         $d = $parser->getHeader('date');
         try {
-		$sentOn = new DateTimeImmutable($d);
-	} catch ( Exception $e ) {
-		$sentOn = (new DateTimeImmutable())->sub( new DateInterval("PT".($minDelay + 1)."H") );
-	}
+            $sentOn = new DateTimeImmutable($d);
+        } catch (Exception $e) {
+            $sentOn = (new DateTimeImmutable())->sub(new DateInterval("PT" . ($minDelay + 1) . "H"));
+        }
         echo 'Came from: ' . $from . '. Date: ' . $d . PHP_EOL;
         $rightNow = new DateTimeImmutable('now', $sentOn->getTimeZone());
         $elapsed = $rightNow->diff($sentOn, true)->h;
 
-        if ($elapsed >= $minDelay && (empty($allowedFrom) || senderBelongs($from, $allowedFrom)) && !senderBelongs($from, $notAllowedFrom)) {
+        if (
+            $elapsed >= $minDelay &&
+            (empty($allowedFrom) || senderBelongs($from, $allowedFrom)) &&
+            !senderBelongs($from, $notAllowedFrom)
+        ) {
             if (!array_key_exists('dry-run', $options)) {
                 moveToInbox($service, $user, $message, $hiddenLabelId);
             }
@@ -114,7 +119,7 @@ function moveToInbox(Google_Service_Gmail $service, string $user, $message, stri
 function senderBelongs(string $from, array $importantSenders): bool
 {
     foreach ($importantSenders as $importantSender) {
-        if ($importantSender && (strpos($from, $importantSender) !== false)) {
+        if ($importantSender && (strpos(strtolower($from), $importantSender) !== false)) {
 
             return true;
         }
@@ -183,7 +188,7 @@ function getEmailsFromList(array $list): array
     foreach ($list as $listEntry) {
         if (is_readable($listEntry)) {
             $ret = array_merge($ret, array_map(function (string $s) {
-                return trim($s);
+                return strtolower(trim($s));
             }, file($listEntry)));
         } else {
             $ret[] = $listEntry;
