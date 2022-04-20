@@ -11,5 +11,13 @@
         "google/apiclient": "^2.0",
         "php-mime-mail-parser/php-mime-mail-parser": "^7.0",
         "vlucas/phpdotenv": "^5.4"
+    },
+    "scripts": {
+        "pre-autoload-dump": "Google\\Task\\Composer::cleanup"
+    },
+    "extra": {
+        "google/apiclient-services": [
+            "Gmail"
+        ]
     }
 }
