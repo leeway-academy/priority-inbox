@@ -7,3 +7,5 @@ hidden_label_prefix.php
 .idea/
 *.txt
 *.log
+.env
+token.json
