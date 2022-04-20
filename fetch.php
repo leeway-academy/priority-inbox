@@ -3,18 +3,15 @@
 <?php
 require_once __DIR__ . '/vendor/autoload.php';
 
-define('APPLICATION_NAME', 'Gmail API PHP Quickstart');
-define('CREDENTIALS_PATH', __DIR__ . '/credentials.json');
-define('CLIENT_SECRET_PATH', __DIR__ . '/client_secret.json');
-// If modifying these scopes, delete your previously saved credentials
-// at ~/gmail-php-quickstart.json
-define('SCOPES', implode(' ', array(
-        Google_Service_Gmail::MAIL_GOOGLE_COM)
-));
+use Google\Client as GoogleClient;
+use Google\Service\Gmail as GmailService;
 
 if (php_sapi_name() != 'cli') {
-    throw new Exception('This application must be run on the command line.');
+    die('This application must be run on the command line.');
 }
+
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+$dotenv->load();
 
 $options = getopt('b:w:m:', ['dry-run']);
 
@@ -29,20 +26,17 @@ $notAllowedFrom = getEmailsFromList($blacklistEntries);
 echo 'allowedFrom = ' . implode(', ', $allowedFrom) . PHP_EOL;
 echo 'notAllowedFrom = ' . implode(', ', $notAllowedFrom) . PHP_EOL;
 
-echo 'Using credentials from: ' . CREDENTIALS_PATH . PHP_EOL;
-
-/**
- * Returns an authorized API client.
- * @return Google_Client the authorized client object
- */
-
-// Get the API client and construct the service object.
-$client = getClient();
-$service = new Google_Service_Gmail($client);
+$service = new GmailService(getGoogleClient(
+    $_ENV['APPLICATION_NAME'],
+    $_ENV['CLIENT_SECRET_PATH'],
+    [
+        GmailService::MAIL_GOOGLE_COM
+    ]
+));
 
 $user = 'me';
 
-$hiddenLabelPrefix = require_once 'hidden_label_prefix.php';
+$hiddenLabelPrefix = $_ENV['HIDDEN_LABEL_PREFIX'];
 
 try {
     $labelsResponse = $service->users_labels->listUsersLabels($user);
@@ -128,17 +122,18 @@ function senderBelongs(string $from, array $importantSenders): bool
     return false;
 }
 
-function getClient()
+function getGoogleClient(string $applicationName, string $clientSecretPath, array $scopes): GoogleClient
 {
-    $client = new Google_Client();
-    $client->setApplicationName(APPLICATION_NAME);
-    $client->setScopes(SCOPES);
-    $client->setAuthConfig(CLIENT_SECRET_PATH);
+    $client = new GoogleClient();
+    $client->setApplicationName($applicationName);
+    $client->setScopes($scopes);
+    $client->setAuthConfig($clientSecretPath);
     $client->setAccessType('offline');
 
     // Load previously authorized credentials from a file.
-    $credentialsPath = expandHomeDirectory(CREDENTIALS_PATH);
+    $credentialsPath = __DIR__.'/token.json';
     if (file_exists($credentialsPath)) {
+        echo 'Using credentials found at '.$credentialsPath.PHP_EOL;
         $accessToken = json_decode(file_get_contents($credentialsPath), true);
     } else {
         // Request authorization from the user.
@@ -164,21 +159,8 @@ function getClient()
         $client->fetchAccessTokenWithRefreshToken($client->getRefreshToken());
         file_put_contents($credentialsPath, json_encode($client->getAccessToken()));
     }
-    return $client;
-}
 
-/**
- * Expands the home directory alias '~' to the full path.
- * @param string $path the path to expand.
- * @return string the expanded path.
- */
-function expandHomeDirectory($path)
-{
-    $homeDirectory = getenv('HOME');
-    if (empty($homeDirectory)) {
-        $homeDirectory = getenv('HOMEDRIVE') . getenv('HOMEPATH');
-    }
-    return str_replace('~', realpath($homeDirectory), $path);
+    return $client;
 }
 
 function getEmailsFromList(array $list): array
