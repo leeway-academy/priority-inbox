@@ -23,8 +23,8 @@ $importantKeyword = array_key_exists('k', $options) ? (is_array($options['k']) ?
 $allowedFrom = getEmailsFromList($whitelistEntries);
 $notAllowedFrom = getEmailsFromList($blacklistEntries);
 
-echo 'allowedFrom = ' . implode(', ', $allowedFrom) . PHP_EOL;
-echo 'notAllowedFrom = ' . implode(', ', $notAllowedFrom) . PHP_EOL;
+echo date('Y-m-d H:i:s').' allowedFrom = ' . implode(', ', $allowedFrom) . PHP_EOL;
+echo date('Y-m-d H:i:s').' notAllowedFrom = ' . implode(', ', $notAllowedFrom) . PHP_EOL;
 
 $service = new GmailService(getGoogleClient(
     $_ENV['APPLICATION_NAME'],
@@ -54,14 +54,14 @@ try {
     die('An error occurred: ' . $e->getMessage());
 }
 
-echo "Fetching messages labeled '$hiddenLabelName', id: '$hiddenLabelId'. Options received: " . implode(', ', array_keys($options)) . PHP_EOL;
+echo date('Y-m-d H:i:s')." Fetching messages labeled '$hiddenLabelName', id: '$hiddenLabelId'. Options received: " . implode(', ', array_keys($options)) . PHP_EOL;
 $results = $service->users_messages->listUsersMessages($user, ['labelIds' => [$hiddenLabelId]]);
 
 $messages = $results->getMessages();
 
 $parser = new PhpMimeMailParser\Parser();
 
-echo 'Found ' . count($messages) . ' messages' . PHP_EOL;
+echo date('Y-m-d H:i:s').' Found ' . count($messages) . ' messages' . PHP_EOL;
 foreach ($messages as $message) {
     if ($real_message = $service->users_messages->get(
         $user,
@@ -80,7 +80,7 @@ foreach ($messages as $message) {
         } catch (Exception $e) {
             $sentOn = (new DateTimeImmutable())->sub(new DateInterval("PT" . ($minDelay + 1) . "H"));
         }
-        echo 'Came from: ' . $from . '. Date: ' . $d . PHP_EOL;
+        echo date('Y-m-d H:i:s').' Came from: ' . $from . '. Date: ' . $d . PHP_EOL;
         $rightNow = new DateTimeImmutable('now', $sentOn->getTimeZone());
         $elapsed = $rightNow->diff($sentOn, true)->h;
 
@@ -98,15 +98,15 @@ foreach ($messages as $message) {
 
 function moveToInbox(Google_Service_Gmail $service, string $user, $message, string $hiddenLabelId)
 {
-    echo 'Moving to Inbox' . PHP_EOL;
+    echo date('Y-m-d H:i:s').' Moving to Inbox' . PHP_EOL;
     $mods = new Google_Service_Gmail_ModifyMessageRequest();
     $mods->setAddLabelIds(['INBOX']);
     $mods->setRemoveLabelIds([$hiddenLabelId]);
     try {
         $message = $service->users_messages->modify($user, $message->getId(), $mods);
-        print 'Message with ID: ' . $message->getId() . ' successfully modified.' . PHP_EOL;
+        print date('Y-m-d H:i:s').' Message with ID: ' . $message->getId() . ' successfully modified.' . PHP_EOL;
     } catch (Exception $e) {
-        print 'An error occurred: ' . $e->getMessage() . PHP_EOL;
+        print date('Y-m-d H:i:s').' An error occurred: ' . $e->getMessage() . PHP_EOL;
     }
 }
 
@@ -133,7 +133,7 @@ function getGoogleClient(string $applicationName, string $clientSecretPath, arra
     // Load previously authorized credentials from a file.
     $credentialsPath = __DIR__.'/token.json';
     if (file_exists($credentialsPath)) {
-        echo 'Using credentials found at '.$credentialsPath.PHP_EOL;
+        echo date('Y-m-d H:i:s').' Using credentials found at '.$credentialsPath.PHP_EOL;
         $accessToken = json_decode(file_get_contents($credentialsPath), true);
     } else {
         // Request authorization from the user.
