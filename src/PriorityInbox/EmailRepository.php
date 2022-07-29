@@ -16,4 +16,9 @@ class EmailRepository
     {
 
     }
+
+    public function addFilter() : self
+    {
+        return $this;
+    }
 }

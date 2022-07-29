@@ -7,6 +7,7 @@ use PriorityInbox\EmailId;
 use PriorityInbox\EmailPriorityMover;
 use PriorityInbox\EmailRepository;
 use PriorityInbox\Label;
+use PriorityInbox\LabelFilter;
 
 class EmailPriorityMoverShould extends TestCase
 {
@@ -67,21 +68,14 @@ class EmailPriorityMoverShould extends TestCase
      */
     public function start_with_hidden_emails_only(): void
     {
-        $hiddenEmail = new Email(new EmailId("1"), new EmailAddress("mchojrin@gmail.com"));
-        $hiddenLabel = new Label(self::HIDDEN_EMAILS);
-        $hiddenEmail->addLabel($hiddenLabel);
-
-        $nonHiddenEmail = new Email(new EmailId("2"), new EmailAddress("sender@gmail.com"));
-
         $this
             ->emailRepository
-            ->method('fetch')
-            ->willReturn([$hiddenEmail])
+            ->expects($this->once())
+            ->method('addFilter')
+            ->with($this->equalTo(new LabelFilter(new Label(self::HIDDEN_EMAILS))))
             ;
 
         $this->emailPriorityMover->fillInbox();
-
-        $this->assertContains($hiddenLabel, $hiddenEmail->getLabels());
     }
 
     public function provideEmailDetails(): array
