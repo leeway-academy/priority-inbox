@@ -17,7 +17,7 @@ class EmailRepository
 
     }
 
-    public function addFilter() : self
+    public function addFilter(LabelFilter $filter) : self
     {
         return $this;
     }

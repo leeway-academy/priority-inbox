@@ -67,7 +67,7 @@ class EmailPriorityMover
          */
         return $this
             ->emailRepository
-            ->addFilter()
+            ->addFilter(new LabelFilter($label))
             ->fetch()
             ;
     }
