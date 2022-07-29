@@ -65,6 +65,10 @@ class EmailPriorityMover
         /**
          * @todo this method should use the query methods from the underlying repository
          */
-        return $this->emailRepository->fetch();
+        return $this
+            ->emailRepository
+            ->addFilter()
+            ->fetch()
+            ;
     }
 }

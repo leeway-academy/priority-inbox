@@ -75,6 +75,11 @@ class EmailPriorityMoverShould extends TestCase
             ->with($this->equalTo(new LabelFilter(new Label(self::HIDDEN_EMAILS))))
             ;
 
+        $this
+            ->emailPriorityMover
+            ->addAllowedSender(new EmailAddress("sarasa"))
+            ;
+
         $this->emailPriorityMover->fillInbox();
     }
 
