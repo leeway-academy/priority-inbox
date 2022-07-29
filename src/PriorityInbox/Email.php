@@ -5,13 +5,13 @@ namespace PriorityInbox;
 class Email
 {
     private EmailId $emailId;
-    private EmailAddress $senderAddress;
+    private EmailAddress $sender;
     private array $labels = [];
 
-    public function __construct(EmailId $emailId, EmailAddress $senderAddress)
+    public function __construct(EmailId $emailId, EmailAddress $sender)
     {
         $this->emailId = $emailId;
-        $this->senderAddress = $senderAddress;
+        $this->sender = $sender;
     }
 
     public function getLabels(): array
@@ -23,5 +23,10 @@ class Email
     {
         $this->labels[] = $newLabel;
         return $this;
+    }
+
+    public function getSender() : EmailAddress
+    {
+        return $this->sender;
     }
 }

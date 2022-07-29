@@ -7,23 +7,25 @@ class EmailPriorityMover
     const INBOX = "INBOX";
     private EmailRepository $emailRepository;
     private array $allowedSenders = [];
+    private Label $hiddenLabel;
 
-    public function __construct(EmailRepository $emailRepository)
+    public function __construct(EmailRepository $emailRepository, Label $hiddenLabel)
     {
         $this->emailRepository = $emailRepository;
+        $this->hiddenLabel = $hiddenLabel;
     }
 
     public function fillInbox(): void
     {
         foreach ($this->getAllowedSenders() as $allowedSender) {
-            $this->moveEmailsFromToInbox($allowedSender);
+            $this->moveToInboxIfSentBy($allowedSender);
         }
     }
 
-    private function moveEmailsFromToInbox(EmailAddress $allowedSender): void
+    private function moveToInboxIfSentBy(EmailAddress $allowedSender): void
     {
-        foreach ($this->fetchEmailsFrom($allowedSender) as $allowedEmail) {
-            $this->moveToInbox($allowedEmail);
+        foreach ($this->fetchEmailsToMove() as $email) {
+            $this->moveToInbox($email);
         }
     }
 
@@ -38,15 +40,31 @@ class EmailPriorityMover
         $this->emailRepository->updateEmail($email);
     }
 
-    private function fetchEmailsFrom(EmailAddress $allowedSender): array
-    {
-        return $this->emailRepository->fetchFrom($allowedSender);
-    }
-
     public function addAllowedSender(EmailAddress $sender): self
     {
         $this->allowedSenders[] = $sender;
 
         return $this;
+    }
+
+    private function fetchEmailsToMove() : array
+    {
+        return array_filter(
+            $this->fetchEmailsLabeled($this->getHiddenLabel()),
+            fn(Email $email) => in_array($email->getSender(), $this->getAllowedSenders())
+        );
+    }
+
+    private function getHiddenLabel() : Label
+    {
+        return $this->hiddenLabel;
+    }
+
+    private function fetchEmailsLabeled(Label $label): array
+    {
+        /**
+         * @todo this method should use the query methods from the underlying repository
+         */
+        return $this->emailRepository->fetch();
     }
 }

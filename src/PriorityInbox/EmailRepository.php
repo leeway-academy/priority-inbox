@@ -2,9 +2,12 @@
 
 namespace PriorityInbox;
 
+/**
+ * @todo build some more abstract query methods
+ */
 class EmailRepository
 {
-    public function fetchFrom(EmailAddress $sender): array
+    public function fetch(): array
     {
         return [];
     }
