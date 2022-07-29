@@ -4,7 +4,6 @@
 require_once __DIR__ . '/vendor/autoload.php';
 
 use Google\Client as GoogleClient;
-use Google\Service\Gmail as GmailService;
 
 if (php_sapi_name() != 'cli') {
     die('This application must be run on the command line.');
@@ -43,7 +42,7 @@ try {
 
     if ($labels = $labelsResponse->getLabels()) {
         foreach ($labels as $label) {
-            if (substr($label->getName(), 0, strlen($hiddenLabelPrefix)) == $hiddenLabelPrefix) {
+            if (str_starts_with($label->getName(), $hiddenLabelPrefix)) {
                 $hiddenLabelId = trim($label->getId());
                 $hiddenLabelName = $label->getName();
                 break;
@@ -96,7 +95,7 @@ foreach ($messages as $message) {
     }
 }
 
-function moveToInbox(Google_Service_Gmail $service, string $user, $message, string $hiddenLabelId)
+function moveToInbox(Google_Service_Gmail $service, string $user, $message, string $hiddenLabelId): void
 {
     echo date('Y-m-d H:i:s').' Moving to Inbox' . PHP_EOL;
     $mods = new Google_Service_Gmail_ModifyMessageRequest();

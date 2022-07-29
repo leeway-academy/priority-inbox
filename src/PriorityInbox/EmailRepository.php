@@ -5,20 +5,17 @@ namespace PriorityInbox;
 /**
  * @todo build some more abstract query methods
  */
-class EmailRepository
+abstract class EmailRepository
 {
-    public function fetch(): array
-    {
-        return [];
-    }
+    private array $filters = [];
 
-    public function updateEmail(Email $param) : void
-    {
+    public abstract function fetch(): array;
 
-    }
+    public abstract function updateEmail(Email $param): void;
 
-    public function addFilter(LabelFilter $filter) : self
+    public function addFilter(LabelFilter $filter): self
     {
+        $this->filters[] = $filter;
         return $this;
     }
 }
