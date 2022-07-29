@@ -113,7 +113,7 @@ function moveToInbox(Google_Service_Gmail $service, string $user, $message, stri
 function senderBelongs(string $from, array $importantSenders): bool
 {
     foreach ($importantSenders as $importantSender) {
-        if ($importantSender && (strpos(strtolower($from), $importantSender) !== false)) {
+        if ($importantSender && (str_contains(strtolower($from), $importantSender))) {
 
             return true;
         }
