@@ -13,24 +13,23 @@ class EmailPriorityMoverShould extends TestCase
 
     /**
      * @test
-     * @param string $senderAddress
      * @param $emailId
+     * @param string $senderAddress
      * @dataProvider provideEmailDetails
      */
-    public function move_emails_from_whitelisted_senders_to_inbox(string $senderAddress, $emailId): void
+    public function move_emails_from_whitelisted_senders_to_inbox(EmailId $emailId, EmailAddress $senderAddress): void
     {
-        $emailFromWhiteListedSender = new Email(new EmailId($emailId), new EmailAddress($senderAddress));
+        $emailFromWhiteListedSender = new Email($emailId, $senderAddress);
 
         $emailRepository = $this->createMock(EmailRepository::class);
 
         $emailRepository
             ->method('fetchFrom')
-            ->willReturn([ $emailFromWhiteListedSender ]);
+            ->willReturn([$emailFromWhiteListedSender]);
 
         $emailRepository->expects($this->once())
             ->method('updateEmail')
-            ->with($this->equalTo($emailFromWhiteListedSender))
-            ;
+            ->with($this->equalTo($emailFromWhiteListedSender));
 
         $emailPriorityMover = new EmailPriorityMover($emailRepository);
         $emailPriorityMover->fillInbox();
@@ -41,7 +40,8 @@ class EmailPriorityMoverShould extends TestCase
     public function provideEmailDetails(): array
     {
         return [
-            [ "1", "mchojrin@gmail.com" ],
+            [new EmailId("1"), new EmailAddress("mchojrin@gmail.com")],
+            [new EmailId("2"), new EmailAddress("maria.pappen@gmail.com")],
         ];
     }
 }

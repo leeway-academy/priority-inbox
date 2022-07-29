@@ -4,11 +4,12 @@ namespace PriorityInbox;
 
 class EmailId
 {
-
+    private string $value;
     /**
-     * @param string $string
+     * @param string $value
      */
-    public function __construct(string $string)
+    public function __construct(string $value)
     {
+        $this->value = $value;
     }
 }
