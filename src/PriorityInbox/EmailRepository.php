@@ -4,7 +4,7 @@ namespace PriorityInbox;
 
 class EmailRepository
 {
-    public function fetchFrom(): array
+    public function fetchFrom(EmailAddress $sender): array
     {
         return [];
     }

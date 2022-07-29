@@ -4,10 +4,9 @@ namespace PriorityInbox;
 
 class Email
 {
-
-    const INBOX = "INBOX";
     private EmailId $emailId;
     private EmailAddress $senderAddress;
+    private array $labels = [];
 
     public function __construct(EmailId $emailId, EmailAddress $senderAddress)
     {
@@ -17,6 +16,12 @@ class Email
 
     public function getLabels(): array
     {
-        return [self::INBOX];
+        return $this->labels;
+    }
+
+    public function addLabel(Label $newLabel): self
+    {
+        $this->labels[] = $newLabel;
+        return $this;
     }
 }
