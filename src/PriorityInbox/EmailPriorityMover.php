@@ -23,7 +23,7 @@ class EmailPriorityMover
     private function moveEmailsFromToInbox(EmailAddress $allowedSender): void
     {
         foreach ($this->fetchEmailsFrom($allowedSender) as $allowedEmail) {
-            $this->moveEmailToInbox($allowedEmail);
+            $this->moveToInbox($allowedEmail);
         }
     }
 
@@ -32,9 +32,10 @@ class EmailPriorityMover
         return $this->allowedSenders;
     }
 
-    private function moveEmailToInbox(Email $allowedEmail) : void
+    private function moveToInbox(Email $email) : void
     {
-        $allowedEmail->addLabel(new Label(self::INBOX));
+        $email->addLabel(new Label(self::INBOX));
+        $this->emailRepository->updateEmail($email);
     }
 
     private function fetchEmailsFrom(EmailAddress $allowedSender): array

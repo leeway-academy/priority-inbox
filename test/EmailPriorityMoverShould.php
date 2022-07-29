@@ -34,7 +34,7 @@ class EmailPriorityMoverShould extends TestCase
 
         $emailPriorityMover->fillInbox();
 
-        $this->assertContains(new Label(self::INBOX), $emailFromWhiteListedSender->getLabels());
+        $this->assertContains(self::INBOX, array_map(fn (Label $label) => $label->value(), $emailFromWhiteListedSender->getLabels()));
     }
 
     public function provideEmailDetails(): array

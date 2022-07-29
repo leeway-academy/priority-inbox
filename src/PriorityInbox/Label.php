@@ -13,4 +13,9 @@ class Label
     {
         $this->value = $value;
     }
+
+    public function value(): string
+    {
+        return $this->value;
+    }
 }
