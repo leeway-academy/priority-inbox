@@ -18,27 +18,27 @@ $importantKeyword = getImportantKeywords($options);
 $allowedFrom = getEmailsFromList(getWhiteListEntries($options));
 $notAllowedFrom = getEmailsFromList(getBlackListEntries($options));
 
-logMessage('allowedFrom = ' . implode(', ', $allowedFrom));
-logMessage('notAllowedFrom = ' . implode(', ', $notAllowedFrom));
+logMessage("Allowing emails sent at least $minDelay hours ago");
+
+if (!empty($allowedFrom)) {
+    logMessage("Only allowing emails sent by " . implode(', ', $allowedFrom));
+}
+
+if (!empty($notAllowedFrom)) {
+    logMessage("Only allowing emails NOT sent by " . implode(', ', $notAllowedFrom));
+}
 
 $gmailService = buildGmailService();
 list($hiddenLabelId, $hiddenLabelName) = getHiddenLabelInformation($gmailService, $_ENV['HIDDEN_LABEL_PREFIX']);
 
-logMessage("Fetching messages labeled '$hiddenLabelName', id: '$hiddenLabelId'. Options received: " . implode(', ', array_keys($options)));
+logMessage("Fetching messages labeled '$hiddenLabelName', id: '$hiddenLabelId'");
 
-$parser = new PhpMimeMailParser\Parser();
+processMessages($gmailService, getMinimumDelay($options), $allowedFrom, $notAllowedFrom, $options, $hiddenLabelId);
 
-$messages = getHiddenMessages($gmailService, $hiddenLabelId);
-
-logMessage('Found ' . count($messages) . ' messages');
-
-processMessages($messages, $gmailService, 'me', $parser, $minDelay, $allowedFrom, $notAllowedFrom, $options, $hiddenLabelId);
+/**** Functions *****/
 
 /**
- * @param array $messages
  * @param GmailService $gmailService
- * @param string $user
- * @param Parser $parser
  * @param int $minDelay
  * @param array $allowedFrom
  * @param array $notAllowedFrom
@@ -47,10 +47,14 @@ processMessages($messages, $gmailService, 'me', $parser, $minDelay, $allowedFrom
  * @return void
  * @throws Exception
  */
-function processMessages(array $messages, GmailService $gmailService, string $user, Parser $parser, int $minDelay, array $allowedFrom, array $notAllowedFrom, array|bool $options, mixed $hiddenLabelId): void
+function processMessages(GmailService $gmailService, int $minDelay, array $allowedFrom, array $notAllowedFrom, array|bool $options, mixed $hiddenLabelId): void
 {
+    $parser = new PhpMimeMailParser\Parser();
+    $messages = getHiddenMessages($gmailService, $hiddenLabelId);
+
+    logMessage('Found ' . count($messages) . ' messages');
     foreach ($messages as $message) {
-        processMessage($message, $gmailService, $user, $parser, $minDelay, $allowedFrom, $notAllowedFrom, $options, $hiddenLabelId);
+        processMessage($message, $gmailService, $parser, $minDelay, $allowedFrom, $notAllowedFrom, $options, $hiddenLabelId);
     }
 }
 
@@ -95,18 +99,17 @@ function getSentDate(bool|string $d, int $minDelay): DateTimeImmutable
 
 /**
  * @param GmailService $gmailService
- * @param string $user
- * @param GmailMessage $message
+ * @param string $messageId
  * @return GmailMessage
  */
 
-function getMessage(GmailService $gmailService, string $user, GmailMessage $message): GmailMessage
+function getMessage(GmailService $gmailService, string $messageId): GmailMessage
 {
     return $gmailService
         ->users_messages
         ->get(
-            $user,
-            $message->getId(),
+            'me',
+            $messageId,
             [
                 'format' => 'raw',
             ]
@@ -125,17 +128,20 @@ function decodeMessage(GmailMessage $real_message): string|false
 /**
  * @param GmailMessage $message
  * @param Google_Service_Gmail $service
- * @param string $user
  * @param string $hiddenLabelId
  * @return void
  */
-function moveToInbox(GmailMessage $message, Google_Service_Gmail $service, string $user, string $hiddenLabelId): void
+function moveToInbox(GmailMessage $message, Google_Service_Gmail $service, string $hiddenLabelId): void
 {
     logMessage('Moving to Inbox');
     $mods = new Google_Service_Gmail_ModifyMessageRequest();
     $mods->setAddLabelIds(['INBOX']);
     $mods->setRemoveLabelIds([$hiddenLabelId]);
-    $message = $service->users_messages->modify($user, $message->getId(), $mods);
+    $service
+        ->users_messages
+        ->modify('me',
+            $message->getId(),
+            $mods);
     logMessage(' Message with ID: ' . $message->getId() . ' successfully modified.');
 }
 
@@ -332,7 +338,6 @@ function getHiddenMessages(GmailService $gmailService, mixed $hiddenLabelId): ar
 /**
  * @param GmailMessage $message
  * @param GmailService $gmailService
- * @param string $user
  * @param Parser $parser
  * @param int $minDelay
  * @param array $allowedFrom
@@ -342,56 +347,55 @@ function getHiddenMessages(GmailService $gmailService, mixed $hiddenLabelId): ar
  * @return void
  * @throws Exception
  */
-function processMessage(GmailMessage $message, GmailService $gmailService, string $user, Parser $parser, int $minDelay, array $allowedFrom, array $notAllowedFrom, array|bool $options, mixed $hiddenLabelId): void
+function processMessage(GmailMessage $message, GmailService $gmailService, Parser $parser, int $minDelay, array $allowedFrom, array $notAllowedFrom, array|bool $options, mixed $hiddenLabelId): void
 {
-    if ($message = getMessage($gmailService, $user, $message)) {
-        $parser->setText(decodeMessage($message));
+    if ($fullMessage = getMessage($gmailService, $message->getId())) {
+        $parser->setText(decodeMessage($fullMessage));
         $from = $parser->getHeader('from');
         $sentOn = getSentDate($parser->getHeader('date'), $minDelay);
 
-        echo date('Y-m-d H:i:s') . ' Came from: ' . $from . '. Date: ' . $sentOn->format('dd-MM-YYYY') . PHP_EOL;
+        logMessage('Came from: ' . $from . '. Date: ' . $sentOn->format('d-M-Y'));
 
-        if (shouldMessageBeMovedToInbox($sentOn, $minDelay, $allowedFrom, $from, $notAllowedFrom)) {
+        if (shouldMessageBeMovedToInbox($sentOn, $from, $minDelay, $allowedFrom, $notAllowedFrom)) {
             if (!isDryRun($options)) {
-                moveToInbox($message, $gmailService, $user, $hiddenLabelId);
+                moveToInbox($message, $gmailService, $hiddenLabelId);
             }
         }
     }
 }
 
 /**
- * @param bool|array $options
+ * @param array $options
  * @return bool
  */
-function isDryRun(bool|array $options): bool
+function isDryRun(array $options): bool
 {
     return array_key_exists('dry-run', $options);
 }
 
 /**
  * @param DateTimeImmutable $sentOn
+ * @param string $from
  * @param int $minDelay
  * @param array $allowedFrom
- * @param bool|string $from
  * @param array $notAllowedFrom
  * @return bool
  * @throws Exception
  */
-function shouldMessageBeMovedToInbox(DateTimeImmutable $sentOn, int $minDelay, array $allowedFrom, bool|string $from, array $notAllowedFrom): bool
+function shouldMessageBeMovedToInbox(DateTimeImmutable $sentOn, string $from, int $minDelay, array $allowedFrom, array $notAllowedFrom): bool
 {
-    return wasSentWithinAcceptableTimeFrame($sentOn, $minDelay) &&
-        wasSentByAllowedSender($allowedFrom, $from) &&
-        !senderBelongs($notAllowedFrom, $from);
+    return wasSentWithinAcceptableTimeFrame($sentOn, $minDelay) && wasSentByAllowedSender($from, $allowedFrom, $notAllowedFrom);
 }
 
 /**
+ * @param string $sender
  * @param array $allowedFrom
- * @param bool|string $from
+ * @param array $notAllowedFrom
  * @return bool
  */
-function wasSentByAllowedSender(array $allowedFrom, bool|string $from): bool
+function wasSentByAllowedSender(string $sender, array $allowedFrom, array $notAllowedFrom): bool
 {
-    return (empty($allowedFrom) || senderBelongs($allowedFrom, $from));
+    return (empty($allowedFrom) || senderBelongs($allowedFrom, $sender)) && (empty($notAllowedFrom) || !senderBelongs($notAllowedFrom, $sender));
 }
 
 /**
