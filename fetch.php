@@ -29,7 +29,7 @@ if (!empty($notAllowedFrom)) {
 }
 
 $gmailService = buildGmailService();
-list($hiddenLabelId, $hiddenLabelName) = getHiddenLabelInformation($gmailService, $_ENV['HIDDEN_LABEL_PREFIX']);
+list($hiddenLabelId, $hiddenLabelName) = getHiddenLabelInformation();
 
 logMessage("Fetching messages labeled '$hiddenLabelName', id: '$hiddenLabelId'");
 
@@ -296,26 +296,11 @@ function buildGmailService(): GmailService
 }
 
 /**
- * @param GmailService $gmailService
- * @param mixed $hiddenLabelPrefix
  * @return array
  */
-function getHiddenLabelInformation(GmailService $gmailService, mixed $hiddenLabelPrefix): array
+function getHiddenLabelInformation(): array
 {
-    $labelsResponse = $gmailService->users_labels->listUsersLabels('me');
-
-    if ($labels = $labelsResponse->getLabels()) {
-        foreach ($labels as $label) {
-            if (str_starts_with($label->getName(), $hiddenLabelPrefix)) {
-                $hiddenLabelId = trim($label->getId());
-                $hiddenLabelName = $label->getName();
-
-                break;
-            }
-        }
-    }
-
-    return array($hiddenLabelId, $hiddenLabelName);
+    return array($_ENV['HIDDEN_LABEL_ID'], $_ENV['HIDDEN_LABEL_NAME']);
 }
 
 /**
