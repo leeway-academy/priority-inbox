@@ -18,22 +18,21 @@ $importantKeyword = getImportantKeywords($options);
 $allowedFrom = getEmailsFromList(getWhiteListEntries($options));
 $notAllowedFrom = getEmailsFromList(getBlackListEntries($options));
 
-echo date('Y-m-d H:i:s') . ' allowedFrom = ' . implode(', ', $allowedFrom) . PHP_EOL;
-echo date('Y-m-d H:i:s') . ' notAllowedFrom = ' . implode(', ', $notAllowedFrom) . PHP_EOL;
+logMessage('allowedFrom = ' . implode(', ', $allowedFrom));
+logMessage('notAllowedFrom = ' . implode(', ', $notAllowedFrom));
 
 $gmailService = buildGmailService();
-$user = 'me';
-list($hiddenLabelId, $hiddenLabelName) = getHiddenLabelInformation($gmailService, $user, $_ENV['HIDDEN_LABEL_PREFIX']);
+list($hiddenLabelId, $hiddenLabelName) = getHiddenLabelInformation($gmailService, $_ENV['HIDDEN_LABEL_PREFIX']);
 
-echo date('Y-m-d H:i:s') . " Fetching messages labeled '$hiddenLabelName', id: '$hiddenLabelId'. Options received: " . implode(', ', array_keys($options)) . PHP_EOL;
+logMessage("Fetching messages labeled '$hiddenLabelName', id: '$hiddenLabelId'. Options received: " . implode(', ', array_keys($options)));
 
 $parser = new PhpMimeMailParser\Parser();
 
-$messages = getHiddenMessages($gmailService, $user, $hiddenLabelId);
+$messages = getHiddenMessages($gmailService, $hiddenLabelId);
 
-echo date('Y-m-d H:i:s') . ' Found ' . count($messages) . ' messages' . PHP_EOL;
+logMessage('Found ' . count($messages) . ' messages');
 
-processMessages($messages, $gmailService, $user, $parser, $minDelay, $allowedFrom, $notAllowedFrom, $options, $hiddenLabelId);
+processMessages($messages, $gmailService, 'me', $parser, $minDelay, $allowedFrom, $notAllowedFrom, $options, $hiddenLabelId);
 
 /**
  * @param array $messages
@@ -132,12 +131,12 @@ function decodeMessage(GmailMessage $real_message): string|false
  */
 function moveToInbox(GmailMessage $message, Google_Service_Gmail $service, string $user, string $hiddenLabelId): void
 {
-    echo date('Y-m-d H:i:s') . ' Moving to Inbox' . PHP_EOL;
+    logMessage('Moving to Inbox');
     $mods = new Google_Service_Gmail_ModifyMessageRequest();
     $mods->setAddLabelIds(['INBOX']);
     $mods->setRemoveLabelIds([$hiddenLabelId]);
     $message = $service->users_messages->modify($user, $message->getId(), $mods);
-    print date('Y-m-d H:i:s') . ' Message with ID: ' . $message->getId() . ' successfully modified.' . PHP_EOL;
+    logMessage(' Message with ID: ' . $message->getId() . ' successfully modified.');
 }
 
 /**
@@ -149,7 +148,7 @@ function senderBelongs(array $importantSenders, string $from): bool
 {
     return count(
             array_filter($importantSenders, fn(string $sender) => $sender && (str_contains(strtolower($from), $sender)))
-    ) > 0;
+        ) > 0;
 }
 
 /**
@@ -292,13 +291,12 @@ function buildGmailService(): GmailService
 
 /**
  * @param GmailService $gmailService
- * @param string $user
  * @param mixed $hiddenLabelPrefix
  * @return array
  */
-function getHiddenLabelInformation(GmailService $gmailService, string $user, mixed $hiddenLabelPrefix): array
+function getHiddenLabelInformation(GmailService $gmailService, mixed $hiddenLabelPrefix): array
 {
-    $labelsResponse = $gmailService->users_labels->listUsersLabels($user);
+    $labelsResponse = $gmailService->users_labels->listUsersLabels('me');
 
     if ($labels = $labelsResponse->getLabels()) {
         foreach ($labels as $label) {
@@ -316,15 +314,14 @@ function getHiddenLabelInformation(GmailService $gmailService, string $user, mix
 
 /**
  * @param GmailService $gmailService
- * @param string $user
  * @param mixed $hiddenLabelId
  * @return GmailMessage[]
  */
-function getHiddenMessages(GmailService $gmailService, string $user, mixed $hiddenLabelId): array
+function getHiddenMessages(GmailService $gmailService, mixed $hiddenLabelId): array
 {
     $results = $gmailService
         ->users_messages
-        ->listUsersMessages($user, [
+        ->listUsersMessages('me', [
             'labelIds' =>
                 [$hiddenLabelId]
         ]);
@@ -403,4 +400,13 @@ function wasSentByAllowedSender(array $allowedFrom, bool|string $from): bool
 function getCLIOptions(): array|false
 {
     return getopt('b:w:m:', ['dry-run']);
+}
+
+/**
+ * @param string $message
+ * @return void
+ */
+function logMessage(string $message): void
+{
+    echo date('Y-m-d H:i:s') . " $message" . PHP_EOL;
 }
