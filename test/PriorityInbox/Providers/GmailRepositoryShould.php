@@ -30,7 +30,7 @@ class GmailRepositoryShould extends TestCase
      */
     public function fetch_from_gmail_using_filters(): void
     {
-        $label = new Label(self::LABEL_ID, self::A_LABEL);
+        $label = new Label(self::LABEL_ID);
         $labelFilter = new LabelFilter($label);
 
         $this
@@ -107,8 +107,8 @@ class GmailRepositoryShould extends TestCase
         $sentAt = new DateTimeImmutable();
 
 
-        $labelToAdd = new Label(self::LABEL_ADD_THIS, self::LABEL_ADD_THIS);
-        $labelToRemove = new Label(self::LABEL_REMOVE_THIS, self::LABEL_REMOVE_THIS);
+        $labelToAdd = new Label(self::LABEL_ADD_THIS);
+        $labelToRemove = new Label(self::LABEL_REMOVE_THIS);
 
         $email = new Email($emailId, $sender, $sentAt, [$labelToRemove]);
 

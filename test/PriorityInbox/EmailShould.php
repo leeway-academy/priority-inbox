@@ -13,7 +13,7 @@ class EmailShould extends TestCase
     public function keep_track_of_added_labels(): void
     {
         $email = $this->buildEmail();
-        $newLabel = new Label("added", "label");
+        $newLabel = new Label("added");
 
         $email->addLabel($newLabel);
         $this->assertEquals([$newLabel], $email->addedLabels());
@@ -25,7 +25,7 @@ class EmailShould extends TestCase
     public function keep_track_of_removed_labels(): void
     {
         $email = $this->buildEmail();
-        $newLabel = new Label("added", "label");
+        $newLabel = new Label("added");
 
         $email->addLabel($newLabel);
         $email->removeLabel($newLabel);
