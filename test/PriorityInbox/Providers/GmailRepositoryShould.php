@@ -9,6 +9,7 @@ use PriorityInbox\EmailAddress;
 use PriorityInbox\EmailId;
 use PriorityInbox\LabelFilter;
 use PriorityInbox\Label;
+use PriorityInbox\LabelsUpdate;
 
 class GmailRepositoryShould extends TestCase
 {
