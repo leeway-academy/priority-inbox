@@ -70,10 +70,7 @@ class EmailPriorityMover
     {
         $email->addLabel(new Label(self::INBOX));
         $email->removeLabel($this->getHiddenLabel());
-
-        $this
-            ->emailRepository
-            ->updateEmail($email);
+        $this->updateEmail($email);
     }
 
     /**
@@ -167,6 +164,26 @@ class EmailPriorityMover
     {
         $this->notAllowedSenders[] = $sender;
 
+        return $this;
+    }
+
+    /**
+     * @param Email $email
+     * @return void
+     */
+    private function updateEmail(Email $email): void
+    {
+        $this
+            ->emailRepository
+            ->updateEmail($email);
+    }
+
+    /**
+     * @param bool $true
+     * @return $this
+     */
+    public function setDryRun(bool $true): self
+    {
         return $this;
     }
 }
