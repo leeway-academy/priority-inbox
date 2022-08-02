@@ -2,44 +2,30 @@
 
 namespace PriorityInbox;
 
+use Exception;
+
 class EmailPriorityMover
 {
     const INBOX = "INBOX";
+    private Label $hiddenLabel;
     private EmailRepository $emailRepository;
     private array $allowedSenders = [];
-    private Label $hiddenLabel;
+    private int $minimumDelay = 0;
 
+    /**
+     * @param EmailRepository $emailRepository
+     * @param Label $hiddenLabel
+     */
     public function __construct(EmailRepository $emailRepository, Label $hiddenLabel)
     {
         $this->emailRepository = $emailRepository;
         $this->hiddenLabel = $hiddenLabel;
     }
 
-    public function fillInbox(): void
-    {
-        foreach ($this->getAllowedSenders() as $allowedSender) {
-            $this->moveToInboxIfSentBy($allowedSender);
-        }
-    }
-
-    private function moveToInboxIfSentBy(EmailAddress $allowedSender): void
-    {
-        foreach ($this->fetchEmailsToMove() as $email) {
-            $this->moveToInbox($email);
-        }
-    }
-
-    private function getAllowedSenders() : array
-    {
-        return $this->allowedSenders;
-    }
-
-    private function moveToInbox(Email $email) : void
-    {
-        $email->addLabel(new Label(self::INBOX));
-        $this->emailRepository->updateEmail($email);
-    }
-
+    /**
+     * @param EmailAddress $sender
+     * @return $this
+     */
     public function addAllowedSender(EmailAddress $sender): self
     {
         $this->allowedSenders[] = $sender;
@@ -47,28 +33,109 @@ class EmailPriorityMover
         return $this;
     }
 
-    private function fetchEmailsToMove() : array
+    /**
+     * @return void
+     */
+    public function fillInbox(): void
     {
-        return array_filter(
-            $this->fetchEmailsLabeled($this->getHiddenLabel()),
-            fn(Email $email) => in_array($email->getSender(), $this->getAllowedSenders())
-        );
+        foreach($this->fetchHiddenEmails() as $hiddenEmail) {
+            $this->moveToInboxIfMovable($hiddenEmail);
+        }
     }
 
+    /**
+     * @param int $hours
+     * @return $this
+     */
+    public function setMinimumDelay(int $hours): self
+    {
+        $this->minimumDelay = $hours;
+
+        return $this;
+    }
+
+    /**
+     * @param Email $email
+     * @return void
+     */
+    private function moveToInbox(Email $email) : void
+    {
+        $email->addLabel(new Label(self::INBOX, self::INBOX));
+        $email->removeLabel($this->getHiddenLabel());
+
+        $this
+            ->emailRepository
+            ->updateEmail($email);
+    }
+
+    /**
+     * @return array<Email>
+     */
+    private function fetchHiddenEmails() : array
+    {
+        return $this
+            ->fetchEmailsLabeled(
+                $this->getHiddenLabel()
+            );
+    }
+
+    /**
+     * @return Label
+     */
     private function getHiddenLabel() : Label
     {
         return $this->hiddenLabel;
     }
 
+    /**
+     * @param Label $label
+     * @return array<Email>
+     */
     private function fetchEmailsLabeled(Label $label): array
     {
-        /**
-         * @todo this method should use the query methods from the underlying repository
-         */
         return $this
             ->emailRepository
-            ->addFilter(new LabelFilter($label))
-            ->fetch()
+            ->fetch([new LabelFilter($label)])
             ;
+    }
+
+    /**
+     * @param Email $hiddenEmail
+     * @return void
+     */
+    private function moveToInboxIfMovable(Email $hiddenEmail): void
+    {
+        if ($this->shouldMove($hiddenEmail)) {
+            $this->moveToInbox($hiddenEmail);
+        }
+    }
+
+    /**
+     * @param Email $hiddenEmail
+     * @return bool
+     */
+    private function shouldMove(Email $hiddenEmail): bool
+    {
+        return $this->wasSentByAllowedSender($hiddenEmail)
+            && $this->wasSentWithinAcceptableTimeFrame($hiddenEmail);
+    }
+
+    /**
+     * @param Email $hiddenEmail
+     * @return bool
+     */
+    private function wasSentByAllowedSender(Email $hiddenEmail): bool
+    {
+        return !$this->allowedSenders || in_array($hiddenEmail->sender(), $this->allowedSenders);
+    }
+
+    /**
+     * @param Email $hiddenEmail
+     * @return bool
+     * @throws Exception
+     */
+    private function wasSentWithinAcceptableTimeFrame(Email $hiddenEmail): bool
+    {
+        return $hiddenEmail->hoursSinceItWasSent() >= $this->minimumDelay;
     }
 }

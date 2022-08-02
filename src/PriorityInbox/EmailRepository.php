@@ -7,15 +7,15 @@ namespace PriorityInbox;
  */
 abstract class EmailRepository
 {
-    private array $filters = [];
+    /**
+     * @param array $filters
+     * @return array<Email>
+     */
+    public abstract function fetch(array $filters): array;
 
-    public abstract function fetch(): array;
-
-    public abstract function updateEmail(Email $param): void;
-
-    public function addFilter(LabelFilter $filter): self
-    {
-        $this->filters[] = $filter;
-        return $this;
-    }
+    /**
+     * @param Email $email
+     * @return void
+     */
+    public abstract function updateEmail(Email $email): void;
 }
