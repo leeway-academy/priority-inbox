@@ -9,7 +9,14 @@ class EmailPriorityMover
     const INBOX = "INBOX";
     private Label $hiddenLabel;
     private EmailRepository $emailRepository;
+    /**
+     * @var array <Sender>
+     */
     private array $allowedSenders = [];
+    /**
+     * @var array <Sender>
+     */
+    private array $notAllowedSenders = [];
     private int $minimumDelay = 0;
 
     /**
@@ -113,11 +120,13 @@ class EmailPriorityMover
     /**
      * @param Email $hiddenEmail
      * @return bool
+     * @throws Exception
      */
     private function shouldMove(Email $hiddenEmail): bool
     {
         return $this->wasSentByAllowedSender($hiddenEmail)
-            && $this->wasSentWithinAcceptableTimeFrame($hiddenEmail);
+            && $this->wasSentWithinAcceptableTimeFrame($hiddenEmail)
+            && !$this->wasSentByNotAllowedSender($hiddenEmail);
     }
 
     /**
@@ -132,10 +141,30 @@ class EmailPriorityMover
     /**
      * @param Email $hiddenEmail
      * @return bool
+     */
+    private function wasSentByNotAllowedSender(Email $hiddenEmail): bool
+    {
+        return !$this->notAllowedSenders || in_array($hiddenEmail->sender(), $this->notAllowedSenders);
+    }
+
+    /**
+     * @param Email $hiddenEmail
+     * @return bool
      * @throws Exception
      */
     private function wasSentWithinAcceptableTimeFrame(Email $hiddenEmail): bool
     {
         return $hiddenEmail->hoursSinceItWasSent() >= $this->minimumDelay;
+    }
+
+    /**
+     * @param Sender $sender
+     * @return $this
+     */
+    public function addNotAllowedSender(Sender $sender): self
+    {
+        $this->notAllowedSenders[] = $sender;
+
+        return $this;
     }
 }

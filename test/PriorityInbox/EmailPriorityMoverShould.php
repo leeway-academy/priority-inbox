@@ -23,7 +23,7 @@ class EmailPriorityMoverShould extends TestCase
      * @param Sender $sender
      * @dataProvider provideEmailDetails
      */
-    public function label_emails_from_allowed_senders_with_inbox(EmailId $emailId, Sender $sender): void
+    public function move_emails_from_allowed_senders(EmailId $emailId, Sender $sender): void
     {
         $emailFromAllowedSender = new Email($emailId, $sender, new DateTimeImmutable());
         $inboxLabel = new Label(self::INBOX_LABEL_ID, self::INBOX_LABEL_ID);
@@ -48,7 +48,7 @@ class EmailPriorityMoverShould extends TestCase
      * @param Sender $sender
      * @dataProvider provideEmailDetails
      */
-    public function not_label_emails_not_sent_by_allowed_senders_with_inbox(EmailId $emailId, Sender $sender): void
+    public function not_move_emails_not_sent_by_allowed_senders(EmailId $emailId, Sender $sender): void
     {
         $emailFromNotAllowedSender = new Email($emailId, new Sender($sender . "a"), new DateTimeImmutable());
         $inboxLabel = new Label(self::INBOX_LABEL_ID, self::INBOX_LABEL_ID);
@@ -140,6 +140,29 @@ class EmailPriorityMoverShould extends TestCase
         $this
             ->emailPriorityMover
             ->fillInbox();
+    }
+
+    /**
+     * @test
+     * @dataProvider provideEmailDetails
+     */
+    public function respect_black_list(EmailId $emailId, Sender $sender): void
+    {
+        $emailFromBlackListedSender = new Email($emailId, $sender, new DateTimeImmutable());
+        $inboxLabel = new Label(self::INBOX_LABEL_ID, self::INBOX_LABEL_ID);
+
+        $this
+            ->emailRepository
+            ->method('fetch')
+            ->willReturn([$emailFromBlackListedSender]);
+
+        $this
+            ->emailPriorityMover
+            ->addNotAllowedSender($sender)
+            ->fillInbox()
+        ;
+
+        $this->assertNotContainsEquals($inboxLabel, $emailFromBlackListedSender->labels());
     }
 
     /**
