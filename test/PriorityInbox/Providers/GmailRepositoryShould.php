@@ -14,6 +14,10 @@ class GmailRepositoryShould extends TestCase
 {
     const A_LABEL = "A label";
     const LABEL_ID = "abcd";
+    const EMAIL_ID = "1";
+    const SENDER_ADDRESS = "asasas";
+    const LABEL_ADD_THIS = "ADD THIS";
+    const LABEL_REMOVE_THIS = "REMOVE THIS";
     private GmailRepository $gmailRepository;
     private GmailService $gmailService;
 
@@ -44,16 +48,27 @@ class GmailRepositoryShould extends TestCase
      */
     public function update_emails_in_gmail(): void
     {
-        $emailId = new EmailId("1");
-        $sender = new EmailAddress("asasas");
+        $emailId = new EmailId(self::EMAIL_ID);
+        $sender = new EmailAddress(self::SENDER_ADDRESS);
+        $sentAt = new DateTimeImmutable();
+
+        $email = new Email($emailId, $sender, $sentAt);
+
+        $labelToAdd = new Label(self::LABEL_ADD_THIS, self::LABEL_ADD_THIS);
+        $labelToRemove = new Label(self::LABEL_REMOVE_THIS, self::LABEL_REMOVE_THIS);
+
+        $labelsUpdate = new LabelsUpdate([$labelToAdd], [$labelToRemove]);
 
         $this->gmailService
             ->expects($this->once())
             ->method('modifyMessage')
-            ->with($this->equalTo($emailId))
+            ->with($this->equalTo($emailId), $this->equalTo([$labelsUpdate]))
         ;
 
-        $email = new Email($emailId, $sender, new DateTimeImmutable());
+        $email
+            ->addLabel($labelToAdd)
+            ->removeLabel($labelToRemove)
+            ;
 
         $this
             ->gmailRepository
