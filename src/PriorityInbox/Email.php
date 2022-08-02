@@ -112,4 +112,12 @@ class Email
     {
         return $this->removedLabels;
     }
+
+    /**
+     * @return DateTimeImmutable
+     */
+    public function sentAt(): DateTimeImmutable
+    {
+        return $this->sentAt;
+    }
 }
