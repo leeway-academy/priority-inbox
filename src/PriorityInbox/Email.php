@@ -94,7 +94,7 @@ class Email
      */
     public function hoursSinceItWasSent() : int
     {
-        return (new DateTimeImmutable('now', $this->sentAt->getTimeZone()))->diff($this->sentAt, true)->h;
+        return (new DateTimeImmutable('now', $this->sentAt()->getTimeZone()))->diff($this->sentAt(), true)->h;
     }
 
     /**
