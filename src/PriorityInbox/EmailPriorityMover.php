@@ -18,6 +18,7 @@ class EmailPriorityMover
      */
     private array $notAllowedSenders = [];
     private int $minimumDelay = 0;
+    private bool $dryRun = false;
 
     /**
      * @param EmailRepository $emailRepository
@@ -173,17 +174,21 @@ class EmailPriorityMover
      */
     private function updateEmail(Email $email): void
     {
-        $this
-            ->emailRepository
-            ->updateEmail($email);
+        if (!$this->dryRun) {
+            $this
+                ->emailRepository
+                ->updateEmail($email);
+        }
     }
 
     /**
-     * @param bool $true
+     * @param bool $newValue
      * @return $this
      */
-    public function setDryRun(bool $true): self
+    public function setDryRun(bool $newValue): self
     {
+        $this->dryRun = $newValue;
+
         return $this;
     }
 }
