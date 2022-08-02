@@ -28,12 +28,20 @@ if (!empty($notAllowedFrom)) {
     logMessage("Only allowing emails NOT sent by " . implode(', ', $notAllowedFrom));
 }
 
-$gmailService = buildGmailService();
+try {
+    $gmailService = buildGmailService();
+} catch (\Google\Exception $e) {
+    die($e->getMessage());
+}
 list($hiddenLabelId, $hiddenLabelName) = getHiddenLabelInformation();
 
 logMessage("Fetching messages labeled '$hiddenLabelName', id: '$hiddenLabelId'");
 
-processMessages($gmailService, getMinimumDelay($options), $allowedFrom, $notAllowedFrom, $options, $hiddenLabelId);
+try {
+    processMessages($gmailService, getMinimumDelay($options), $allowedFrom, $notAllowedFrom, $options, $hiddenLabelId);
+} catch (Exception $e) {
+    die($e->getMessage());
+}
 
 /**** Functions *****/
 
