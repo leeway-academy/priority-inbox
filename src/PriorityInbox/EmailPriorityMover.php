@@ -42,6 +42,7 @@ class EmailPriorityMover
 
     /**
      * @return void
+     * @throws Exception
      */
     public function fillInbox(): void
     {
@@ -67,7 +68,7 @@ class EmailPriorityMover
      */
     private function moveToInbox(Email $email) : void
     {
-        $email->addLabel(new Label(self::INBOX, self::INBOX));
+        $email->addLabel(new Label(self::INBOX));
         $email->removeLabel($this->getHiddenLabel());
 
         $this
@@ -109,10 +110,11 @@ class EmailPriorityMover
     /**
      * @param Email $hiddenEmail
      * @return void
+     * @throws Exception
      */
     private function moveToInboxIfMovable(Email $hiddenEmail): void
     {
-        if ($this->shouldMove($hiddenEmail)) {
+        if ($this->shouldBeMoved($hiddenEmail)) {
             $this->moveToInbox($hiddenEmail);
         }
     }
@@ -122,7 +124,7 @@ class EmailPriorityMover
      * @return bool
      * @throws Exception
      */
-    private function shouldMove(Email $hiddenEmail): bool
+    private function shouldBeMoved(Email $hiddenEmail): bool
     {
         return $this->wasSentByAllowedSender($hiddenEmail)
             && $this->wasSentWithinAcceptableTimeFrame($hiddenEmail)
@@ -144,7 +146,7 @@ class EmailPriorityMover
      */
     private function wasSentByNotAllowedSender(Email $hiddenEmail): bool
     {
-        return !$this->notAllowedSenders || in_array($hiddenEmail->sender(), $this->notAllowedSenders);
+        return !empty($this->notAllowedSenders) && in_array($hiddenEmail->sender(), $this->notAllowedSenders);
     }
 
     /**

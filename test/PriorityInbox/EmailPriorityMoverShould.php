@@ -26,7 +26,8 @@ class EmailPriorityMoverShould extends TestCase
     public function move_emails_from_allowed_senders(EmailId $emailId, Sender $sender): void
     {
         $emailFromAllowedSender = new Email($emailId, $sender, new DateTimeImmutable());
-        $inboxLabel = new Label(self::INBOX_LABEL_ID, self::INBOX_LABEL_ID);
+        $inboxLabel = new Label(self::INBOX_LABEL_ID);
+        $hiddenLabel = new Label(self::HIDDEN_EMAILS_LABEL_ID);
 
         $this
             ->emailRepository
@@ -39,7 +40,9 @@ class EmailPriorityMoverShould extends TestCase
             ->fillInbox()
         ;
 
-        $this->assertContainsEquals($inboxLabel, $emailFromAllowedSender->labels());
+        $labelsAfter = $emailFromAllowedSender->labels();
+        $this->assertContainsEquals($inboxLabel, $labelsAfter);
+        $this->assertNotContainsEquals($hiddenLabel, $labelsAfter);
     }
 
     /**
@@ -51,7 +54,7 @@ class EmailPriorityMoverShould extends TestCase
     public function not_move_emails_not_sent_by_allowed_senders(EmailId $emailId, Sender $sender): void
     {
         $emailFromNotAllowedSender = new Email($emailId, new Sender($sender . "a"), new DateTimeImmutable());
-        $inboxLabel = new Label(self::INBOX_LABEL_ID, self::INBOX_LABEL_ID);
+        $inboxLabel = new Label(self::INBOX_LABEL_ID);
 
         $this
             ->emailRepository
@@ -76,7 +79,7 @@ class EmailPriorityMoverShould extends TestCase
     public function remove_hidden_label_from_emails_sent_by_allowed_senders(EmailId $emailId, Sender $sender): void
     {
         $emailFromAllowedSender = new Email($emailId, $sender, new DateTimeImmutable());
-        $hiddenLabel = new Label(self::HIDDEN_EMAILS_LABEL_ID, self::HIDDEN_EMAILS_LABEL_VALUE);
+        $hiddenLabel = new Label(self::HIDDEN_EMAILS_LABEL_ID);
 
         $emailFromAllowedSender
             ->addLabel($hiddenLabel);
@@ -105,7 +108,7 @@ class EmailPriorityMoverShould extends TestCase
     public function not_remove_hidden_label_from_emails_not_sent_by_allowed_senders(EmailId $emailId, Sender $sender): void
     {
         $emailFromNotAllowedSender = new Email($emailId, new Sender($sender . "a"), new DateTimeImmutable());
-        $hiddenLabel = new Label(self::HIDDEN_EMAILS_LABEL_ID, self::HIDDEN_EMAILS_LABEL_VALUE);
+        $hiddenLabel = new Label(self::HIDDEN_EMAILS_LABEL_ID);
         $emailFromNotAllowedSender->addLabel($hiddenLabel);
 
         $this
@@ -128,7 +131,7 @@ class EmailPriorityMoverShould extends TestCase
      */
     public function move_hidden_emails_only(): void
     {
-        $hiddenLabel = new Label(self::HIDDEN_EMAILS_LABEL_ID, self::HIDDEN_EMAILS_LABEL_VALUE);
+        $hiddenLabel = new Label(self::HIDDEN_EMAILS_LABEL_ID);
         $filterByHiddenLabel = new LabelFilter($hiddenLabel);
 
         $this
@@ -149,7 +152,7 @@ class EmailPriorityMoverShould extends TestCase
     public function respect_black_list(EmailId $emailId, Sender $sender): void
     {
         $emailFromBlackListedSender = new Email($emailId, $sender, new DateTimeImmutable());
-        $inboxLabel = new Label(self::INBOX_LABEL_ID, self::INBOX_LABEL_ID);
+        $inboxLabel = new Label(self::INBOX_LABEL_ID);
 
         $this
             ->emailRepository
@@ -177,7 +180,7 @@ class EmailPriorityMoverShould extends TestCase
         $movedEmail = new Email(new EmailId("1"), new Sender("sender@domain.com"), new DateTimeImmutable("now -" . $minDelay . " hours"));
         $notMovedEmail = new Email(new EmailId("2"), new Sender("sender@domain.com"), new DateTimeImmutable());
 
-        $labelInbox = new Label(self::INBOX_LABEL_ID, self::INBOX_LABEL_VALUE);
+        $labelInbox = new Label(self::INBOX_LABEL_ID);
 
         $this
             ->emailRepository
@@ -202,7 +205,7 @@ class EmailPriorityMoverShould extends TestCase
     {
         $email = new Email($emailId, $sender, new DateTimeImmutable("now -2 hours"));
         $email
-            ->addLabel(new Label(self::HIDDEN_EMAILS_LABEL_ID, self::HIDDEN_EMAILS_LABEL_VALUE))
+            ->addLabel(new Label(self::HIDDEN_EMAILS_LABEL_ID))
         ;
 
         $this->emailRepository
@@ -249,6 +252,6 @@ class EmailPriorityMoverShould extends TestCase
     {
         parent::setUp();
         $this->emailRepository = $this->createMock(EmailRepository::class);
-        $this->emailPriorityMover = new EmailPriorityMover($this->emailRepository, new Label(self::HIDDEN_EMAILS_LABEL_ID, self::HIDDEN_EMAILS_LABEL_VALUE));
+        $this->emailPriorityMover = new EmailPriorityMover($this->emailRepository, new Label(self::HIDDEN_EMAILS_LABEL_ID));
     }
 }
