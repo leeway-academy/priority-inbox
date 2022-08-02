@@ -151,7 +151,7 @@ class EmailPriorityMoverShould extends TestCase
      */
     public function only_move_emails_sent_after_minimum_delay(int $minDelay): void
     {
-        $movedEmail = new Email(new EmailId("1"), new EmailAddress("sender@domain.com"), new DateTimeImmutable("now -".$minDelay." hours"));
+        $movedEmail = new Email(new EmailId("1"), new EmailAddress("sender@domain.com"), new DateTimeImmutable("now -" . $minDelay . " hours"));
         $notMovedEmail = new Email(new EmailId("2"), new EmailAddress("sender@domain.com"), new DateTimeImmutable());
 
         $labelInbox = new Label(self::INBOX_LABEL_ID, self::INBOX_LABEL_VALUE);

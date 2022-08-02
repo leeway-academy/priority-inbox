@@ -7,9 +7,9 @@ use PHPUnit\Framework\TestCase;
 use PriorityInbox\Email;
 use PriorityInbox\EmailAddress;
 use PriorityInbox\EmailId;
-use PriorityInbox\LabelFilter;
+use PriorityInbox\EmailUpdate;
 use PriorityInbox\Label;
-use PriorityInbox\LabelsUpdate;
+use PriorityInbox\LabelFilter;
 
 class GmailRepositoryShould extends TestCase
 {
@@ -20,7 +20,7 @@ class GmailRepositoryShould extends TestCase
     const LABEL_ADD_THIS = "ADD THIS";
     const LABEL_REMOVE_THIS = "REMOVE THIS";
     private GmailRepository $gmailRepository;
-    private GmailService $gmailService;
+    private GmailDAO $gmailService;
 
     /**
      * @test
@@ -53,17 +53,25 @@ class GmailRepositoryShould extends TestCase
         $sender = new EmailAddress(self::SENDER_ADDRESS);
         $sentAt = new DateTimeImmutable();
 
-        $email = new Email($emailId, $sender, $sentAt);
 
         $labelToAdd = new Label(self::LABEL_ADD_THIS, self::LABEL_ADD_THIS);
         $labelToRemove = new Label(self::LABEL_REMOVE_THIS, self::LABEL_REMOVE_THIS);
 
-        $labelsUpdate = new LabelsUpdate([$labelToAdd], [$labelToRemove]);
+        $email = new Email($emailId, $sender, $sentAt, [$labelToRemove]);
+
+        $emailUpdate = new EmailUpdate();
+        $emailUpdate
+            ->addLabel($labelToAdd)
+            ->removeLabel($labelToRemove)
+            ;
 
         $this->gmailService
             ->expects($this->once())
             ->method('modifyMessage')
-            ->with($this->equalTo($emailId), $this->equalTo([$labelsUpdate]))
+            ->with(
+                $this->equalTo($emailId),
+                $this->equalTo($emailUpdate)
+            )
         ;
 
         $email
@@ -79,7 +87,7 @@ class GmailRepositoryShould extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->gmailService = $this->createMock(GmailService::class);
+        $this->gmailService = $this->createMock(GmailDAO::class);
         $this->gmailRepository = new GmailRepository($this->gmailService);
     }
 }

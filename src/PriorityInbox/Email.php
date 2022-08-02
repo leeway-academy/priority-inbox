@@ -9,14 +9,32 @@ class Email
 {
     private EmailId $emailId;
     private EmailAddress $sender;
-    private array $labels = [];
     private DateTimeImmutable $sentAt;
+    /**
+     * @var array<Label>
+     */
+    private array $labels = [];
+    /**
+     * @var array<Label>
+     */
+    private array $addedLabels = [];
+    /**
+     * @var array<Label>
+     */
+    private array $removedLabels = [];
 
-    public function __construct(EmailId $emailId, EmailAddress $sender, DateTimeImmutable $sentAt)
+    /**
+     * @param EmailId $emailId
+     * @param EmailAddress $sender
+     * @param DateTimeImmutable $sentAt
+     * @param array $labels
+     */
+    public function __construct(EmailId $emailId, EmailAddress $sender, DateTimeImmutable $sentAt, array $labels = [])
     {
         $this->emailId = $emailId;
         $this->sender = $sender;
         $this->sentAt = $sentAt;
+        $this->labels = $labels;
     }
 
     /**
@@ -33,7 +51,7 @@ class Email
      */
     public function addLabel(Label $newLabel): self
     {
-        $this->labels[] = $newLabel;
+        $this->labels[] = $this->addedLabels[] = $newLabel;
 
         return $this;
     }
@@ -63,6 +81,7 @@ class Email
         foreach ($this->labels as $k => $label) {
             if ($label == $toRemove) {
                 unset($this->labels[$k]);
+                $this->removedLabels[] = $toRemove;
 
                 break;
             }
@@ -76,5 +95,21 @@ class Email
     public function hoursSinceItWasSent() : int
     {
         return (new DateTimeImmutable('now', $this->sentAt->getTimeZone()))->diff($this->sentAt, true)->h;
+    }
+
+    /**
+     * @return array<Label>
+     */
+    public function addedLabels(): array
+    {
+        return $this->addedLabels;
+    }
+
+    /**
+     * @return array<Label>
+     */
+    public function removedLabels(): array
+    {
+        return $this->removedLabels;
     }
 }

@@ -3,16 +3,19 @@
 namespace PriorityInbox\Providers;
 
 use DateTimeImmutable;
+use Google\Service\Gmail\Message;
 use PriorityInbox\Email;
 use PriorityInbox\EmailFilter;
 use PriorityInbox\EmailRepository;
-use Google\Service\Gmail\Message;
+use PriorityInbox\EmailUpdate;
+use PriorityInbox\Label;
+use PriorityInbox\RemoveLabel;
 
-class GmailRepository extends EmailRepository
+class GmailRepository implements EmailRepository
 {
-    private GmailService $gmail;
+    private GmailDAO $gmail;
 
-    public function __construct(GmailService $gmail)
+    public function __construct(GmailDAO $gmail)
     {
         $this->gmail = $gmail;
     }
@@ -40,21 +43,10 @@ class GmailRepository extends EmailRepository
     {
         $this
             ->gmail
-            ->modifyMessage($email->id());
-
-        /**
-         * logMessage('Moving to Inbox');
-        $mods = new Google_Service_Gmail_ModifyMessageRequest();
-        $mods->setAddLabelIds(['INBOX']);
-        $mods->setRemoveLabelIds([$hiddenLabelId]);
-        $service
-        ->users_messages
-        ->modify('me',
-        $message->getId(),
-        $mods);
-        logMessage("Message with ID: {$message->getId()} successfully modified.");
-         */
+            ->modifyMessage($email->id(), $this->buildUpdate($email));
     }
+
+
 
     /**
      * @param mixed $message
@@ -77,4 +69,34 @@ class GmailRepository extends EmailRepository
             ->getFilteredMessageList($filters)
             ;
     }
+
+    /**
+     * @param Email $email
+     * @return EmailUpdate
+     */
+    private function buildUpdate(Email $email): EmailUpdate
+    {
+        $emailUpdate = new EmailUpdate();
+
+        foreach ($email->addedLabels() as $addedLabel) {
+            $emailUpdate->addLabel($addedLabel);
+        }
+
+        foreach ($email->removedLabels() as $removedLabel ) {
+            $emailUpdate->removeLabel($removedLabel);
+        }
+
+        return $emailUpdate;
+    }
+
+    /**
+     * @param Email $email
+     * @return array<RemoveLabel>
+     */
+    private function buildRemoveLabelUpdates(Email $email): array
+    {
+        return array_map(fn(Label $label) => new RemoveLabel($label), $email->removedLabels());
+    }
+
+
 }
