@@ -3,21 +3,29 @@
 namespace PriorityInbox\Providers;
 
 use DateTimeImmutable;
+use Exception;
 use Google\Service\Gmail\Message;
+use PhpMimeMailParser\Parser;
 use PriorityInbox\Email;
+use PriorityInbox\EmailAddress;
 use PriorityInbox\EmailFilter;
+use PriorityInbox\EmailId;
 use PriorityInbox\EmailRepository;
 use PriorityInbox\EmailUpdate;
-use PriorityInbox\Label;
-use PriorityInbox\RemoveLabel;
 
 class GmailRepository implements EmailRepository
 {
     private GmailDAO $gmail;
+    private Parser $parser;
 
-    public function __construct(GmailDAO $gmail)
+    /**
+     * @param GmailDAO $gmail
+     * @param Parser $parser
+     */
+    public function __construct(GmailDAO $gmail, Parser $parser)
     {
         $this->gmail = $gmail;
+        $this->parser = $parser;
     }
 
     /**
@@ -29,7 +37,7 @@ class GmailRepository implements EmailRepository
         $emails = [];
 
         foreach ($this->getGmailMessages($filters) as $message) {
-            $emails = $this->buildEmailFrom($message);
+            $emails[] = $this->buildEmailFrom($message);
         }
 
         return $emails;
@@ -47,15 +55,21 @@ class GmailRepository implements EmailRepository
     }
 
 
-
     /**
      * @param mixed $message
      * @return Email
-     * @todo FIXME
      */
-    private function buildEmailFrom(Message $message) : Email
+    private function buildEmailFrom(Message $message): Email
     {
-        return new Email(new DateTimeImmutable());
+        $this
+            ->parser()
+            ->setText($this->decodeMessage($message));
+
+        return new Email(
+            $this->getEmailIdFrom($message),
+            $this->getSenderFromParsedData(),
+            $this->getSentAtFromParsedData(),
+        );
     }
 
     /**
@@ -66,8 +80,7 @@ class GmailRepository implements EmailRepository
     {
         return $this
             ->gmail
-            ->getFilteredMessageList($filters)
-            ;
+            ->getFilteredMessageList($filters);
     }
 
     /**
@@ -82,7 +95,7 @@ class GmailRepository implements EmailRepository
             $emailUpdate->addLabel($addedLabel);
         }
 
-        foreach ($email->removedLabels() as $removedLabel ) {
+        foreach ($email->removedLabels() as $removedLabel) {
             $emailUpdate->removeLabel($removedLabel);
         }
 
@@ -90,13 +103,60 @@ class GmailRepository implements EmailRepository
     }
 
     /**
-     * @param Email $email
-     * @return array<RemoveLabel>
+     * @param Message $message
+     * @return EmailId
      */
-    private function buildRemoveLabelUpdates(Email $email): array
+    private function getEmailIdFrom(Message $message): EmailId
     {
-        return array_map(fn(Label $label) => new RemoveLabel($label), $email->removedLabels());
+        return new EmailId($message->getId());
     }
 
+    /**
+     * @return EmailAddress
+     */
+    private function getSenderFromParsedData(): EmailAddress
+    {
+        return new EmailAddress($this
+            ->parser()
+            ->getHeader('from'));
+    }
 
+    /**
+     * @return DateTimeImmutable
+     */
+    private function getSentAtFromParsedData(): DateTimeImmutable
+    {
+        return $this->buildDateFrom($this->parser()->getHeader('date'));
+    }
+
+    /**
+     * @param string $dateString
+     * @return DateTimeImmutable
+     * @todo Check the exception condition. It doesn't 100% match the original one (found in fetch.php)
+     */
+    private function buildDateFrom(string $dateString): DateTimeImmutable
+    {
+        try {
+            return new DateTimeImmutable($dateString);
+        } catch (Exception $exception) {
+            return new DateTimeImmutable();
+        }
+    }
+
+    /**
+     * @return Parser
+     */
+    private function parser(): Parser
+    {
+        return $this->parser;
+    }
+
+    /**
+     * @param Message $message
+     * @return string
+     */
+    private function decodeMessage(Message $message) : string
+    {
+        return base64_decode(str_replace(['-', '_'], ['+', '/'], $message->getRaw()));
+    }
 }
