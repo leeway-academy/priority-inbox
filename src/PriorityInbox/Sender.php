@@ -2,7 +2,7 @@
 
 namespace PriorityInbox;
 
-class EmailAddress
+class Sender
 {
     private string $value;
 

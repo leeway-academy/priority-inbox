@@ -8,7 +8,7 @@ use Exception;
 class Email
 {
     private EmailId $emailId;
-    private EmailAddress $sender;
+    private Sender $sender;
     private DateTimeImmutable $sentAt;
     /**
      * @var array<Label>
@@ -25,11 +25,11 @@ class Email
 
     /**
      * @param EmailId $emailId
-     * @param EmailAddress $sender
+     * @param Sender $sender
      * @param DateTimeImmutable $sentAt
      * @param array $labels
      */
-    public function __construct(EmailId $emailId, EmailAddress $sender, DateTimeImmutable $sentAt, array $labels = [])
+    public function __construct(EmailId $emailId, Sender $sender, DateTimeImmutable $sentAt, array $labels = [])
     {
         $this->emailId = $emailId;
         $this->sender = $sender;
@@ -57,9 +57,9 @@ class Email
     }
 
     /**
-     * @return EmailAddress
+     * @return Sender
      */
-    public function sender() : EmailAddress
+    public function sender() : Sender
     {
         return $this->sender;
     }

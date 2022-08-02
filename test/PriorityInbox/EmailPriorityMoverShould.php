@@ -20,10 +20,10 @@ class EmailPriorityMoverShould extends TestCase
     /**
      * @test
      * @param EmailId $emailId
-     * @param EmailAddress $sender
+     * @param Sender $sender
      * @dataProvider provideEmailDetails
      */
-    public function label_emails_from_allowed_senders_with_inbox(EmailId $emailId, EmailAddress $sender): void
+    public function label_emails_from_allowed_senders_with_inbox(EmailId $emailId, Sender $sender): void
     {
         $emailFromAllowedSender = new Email($emailId, $sender, new DateTimeImmutable());
         $inboxLabel = new Label(self::INBOX_LABEL_ID, self::INBOX_LABEL_ID);
@@ -45,12 +45,12 @@ class EmailPriorityMoverShould extends TestCase
     /**
      * @test
      * @param EmailId $emailId
-     * @param EmailAddress $sender
+     * @param Sender $sender
      * @dataProvider provideEmailDetails
      */
-    public function not_label_emails_not_sent_by_allowed_senders_with_inbox(EmailId $emailId, EmailAddress $sender): void
+    public function not_label_emails_not_sent_by_allowed_senders_with_inbox(EmailId $emailId, Sender $sender): void
     {
-        $emailFromNotAllowedSender = new Email($emailId, new EmailAddress($sender . "a"), new DateTimeImmutable());
+        $emailFromNotAllowedSender = new Email($emailId, new Sender($sender . "a"), new DateTimeImmutable());
         $inboxLabel = new Label(self::INBOX_LABEL_ID, self::INBOX_LABEL_ID);
 
         $this
@@ -70,10 +70,10 @@ class EmailPriorityMoverShould extends TestCase
     /**
      * @test
      * @param EmailId $emailId
-     * @param EmailAddress $sender
+     * @param Sender $sender
      * @dataProvider provideEmailDetails
      */
-    public function remove_hidden_label_from_emails_sent_by_allowed_senders(EmailId $emailId, EmailAddress $sender): void
+    public function remove_hidden_label_from_emails_sent_by_allowed_senders(EmailId $emailId, Sender $sender): void
     {
         $emailFromAllowedSender = new Email($emailId, $sender, new DateTimeImmutable());
         $hiddenLabel = new Label(self::HIDDEN_EMAILS_LABEL_ID, self::HIDDEN_EMAILS_LABEL_VALUE);
@@ -99,12 +99,12 @@ class EmailPriorityMoverShould extends TestCase
     /**
      * @test
      * @param EmailId $emailId
-     * @param EmailAddress $sender
+     * @param Sender $sender
      * @dataProvider provideEmailDetails
      */
-    public function not_remove_hidden_label_from_emails_not_sent_by_allowed_senders(EmailId $emailId, EmailAddress $sender): void
+    public function not_remove_hidden_label_from_emails_not_sent_by_allowed_senders(EmailId $emailId, Sender $sender): void
     {
-        $emailFromNotAllowedSender = new Email($emailId, new EmailAddress($sender . "a"), new DateTimeImmutable());
+        $emailFromNotAllowedSender = new Email($emailId, new Sender($sender . "a"), new DateTimeImmutable());
         $hiddenLabel = new Label(self::HIDDEN_EMAILS_LABEL_ID, self::HIDDEN_EMAILS_LABEL_VALUE);
         $emailFromNotAllowedSender->addLabel($hiddenLabel);
 
@@ -151,8 +151,8 @@ class EmailPriorityMoverShould extends TestCase
      */
     public function only_move_emails_sent_after_minimum_delay(int $minDelay): void
     {
-        $movedEmail = new Email(new EmailId("1"), new EmailAddress("sender@domain.com"), new DateTimeImmutable("now -" . $minDelay . " hours"));
-        $notMovedEmail = new Email(new EmailId("2"), new EmailAddress("sender@domain.com"), new DateTimeImmutable());
+        $movedEmail = new Email(new EmailId("1"), new Sender("sender@domain.com"), new DateTimeImmutable("now -" . $minDelay . " hours"));
+        $notMovedEmail = new Email(new EmailId("2"), new Sender("sender@domain.com"), new DateTimeImmutable());
 
         $labelInbox = new Label(self::INBOX_LABEL_ID, self::INBOX_LABEL_VALUE);
 
@@ -175,7 +175,7 @@ class EmailPriorityMoverShould extends TestCase
      * @test
      * @dataProvider provideEmailDetails
      */
-    public function update_emails_in_repository(EmailId $emailId, EmailAddress $sender): void
+    public function update_emails_in_repository(EmailId $emailId, Sender $sender): void
     {
         $email = new Email($emailId, $sender, new DateTimeImmutable("now -2 hours"));
         $email
@@ -205,8 +205,8 @@ class EmailPriorityMoverShould extends TestCase
     public function provideEmailDetails(): array
     {
         return [
-            [new EmailId("1"), new EmailAddress("mchojrin@gmail.com")],
-            [new EmailId("2"), new EmailAddress("maria.pappen@gmail.com")],
+            [new EmailId("1"), new Sender("mchojrin@gmail.com")],
+            [new EmailId("2"), new Sender("maria.pappen@gmail.com")],
         ];
     }
 

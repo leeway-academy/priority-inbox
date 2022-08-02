@@ -23,10 +23,10 @@ class EmailPriorityMover
     }
 
     /**
-     * @param EmailAddress $sender
+     * @param Sender $sender
      * @return $this
      */
-    public function addAllowedSender(EmailAddress $sender): self
+    public function addAllowedSender(Sender $sender): self
     {
         $this->allowedSenders[] = $sender;
 

@@ -6,7 +6,7 @@ use DateTimeImmutable;
 use PhpMimeMailParser\Parser;
 use PHPUnit\Framework\TestCase;
 use PriorityInbox\Email;
-use PriorityInbox\EmailAddress;
+use PriorityInbox\Sender;
 use PriorityInbox\EmailId;
 use PriorityInbox\EmailUpdate;
 use PriorityInbox\Label;

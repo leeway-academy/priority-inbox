@@ -7,7 +7,7 @@ use Exception;
 use Google\Service\Gmail\Message;
 use PhpMimeMailParser\Parser;
 use PriorityInbox\Email;
-use PriorityInbox\EmailAddress;
+use PriorityInbox\Sender;
 use PriorityInbox\EmailFilter;
 use PriorityInbox\EmailId;
 use PriorityInbox\EmailRepository;
@@ -112,11 +112,11 @@ class GmailRepository implements EmailRepository
     }
 
     /**
-     * @return EmailAddress
+     * @return Sender
      */
-    private function getSenderFromParsedData(): EmailAddress
+    private function getSenderFromParsedData(): Sender
     {
-        return new EmailAddress($this
+        return new Sender($this
             ->parser()
             ->getHeader('from'));
     }

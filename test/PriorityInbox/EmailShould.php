@@ -38,6 +38,6 @@ class EmailShould extends TestCase
      */
     private function buildEmail(): Email
     {
-        return new Email(new EmailId("1"), new EmailAddress("sender"), new DateTimeImmutable());
+        return new Email(new EmailId("1"), new Sender("sender"), new DateTimeImmutable());
     }
 }
