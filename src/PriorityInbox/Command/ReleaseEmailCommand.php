@@ -32,10 +32,11 @@ class ReleaseEmailCommand extends Command
             ->addOption("white-list", "w", InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, "Name of the file containing allowed senders")
             ->addOption("black-list", "b", InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, "Name of the file containing not allowed senders")
             ->addOption("minimum-delay", "m", InputOption::VALUE_REQUIRED, "How many hours must have since emails were sent", 0)
-            ->addArgument("hidden-label-id",  InputArgument::REQUIRED, "Id of the label used to hide emails")
-            ->addArgument("application-name", InputArgument::REQUIRED, "Gmail application name" )
+            ->addOption("dry-run", "d", InputOption::VALUE_NONE, "Simulate move")
+            ->addArgument("hidden-label-id", InputArgument::REQUIRED, "Id of the label used to hide emails")
+            ->addArgument("application-name", InputArgument::REQUIRED, "Gmail application name")
             ->addArgument("client-secret-path", InputArgument::REQUIRED, "Path to json file where Gmail client secrets are stored")
-        ;
+            ->addArgument("client-credentials-path", InputArgument::REQUIRED, "Path to where the access token is to be stored");
     }
 
     /**
@@ -69,6 +70,7 @@ class ReleaseEmailCommand extends Command
             $input->getArgument('client-credentials-path')
         )));
         $gmailRepository = new GmailRepository($gmailDAO, new Parser());
+
         $this->emailPriorityMover = new EmailPriorityMover(
             $gmailRepository,
             new Label($input->getArgument('hidden-label-id'))
@@ -101,6 +103,10 @@ class ReleaseEmailCommand extends Command
                 }
             }
         }
+
+        if ($input->getOption('dry-run')) {
+            $this->emailPriorityMover->setDryRun(true);
+        }
     }
 
     /**
@@ -121,7 +127,7 @@ class ReleaseEmailCommand extends Command
      * @return GoogleClient
      * @throws GoogleException
      */
-    private function buildGmailClient(string $applicationName, string $clientSecretPath, string $credentialsPath) : Client
+    private function buildGmailClient(string $applicationName, string $clientSecretPath, string $credentialsPath): Client
     {
         $client = new GoogleClient();
         $client->setApplicationName($applicationName);
@@ -130,8 +136,6 @@ class ReleaseEmailCommand extends Command
         $client->setAccessType('offline');
 
         $this->loadExistingCredentialsIfPossible($credentialsPath);
-
-        logMessage('Using credentials found at ' . $credentialsPath);
 
         $client->setAccessToken($this->getAccessTokenDataFrom($credentialsPath));
 
