@@ -16,10 +16,10 @@ class LabelFilter extends EmailFilter
         $this->label = $label;
     }
 
-    #[ArrayShape(['labelsIds' => "string[]"])]
+    #[ArrayShape(['labelIds' => "string[]"])]
     public function getExpression(): array
     {
-        return ['labelsIds' => [$this->getLabelId()]];
+        return ['labelIds' => [$this->getLabelId()]];
     }
 
     /**
