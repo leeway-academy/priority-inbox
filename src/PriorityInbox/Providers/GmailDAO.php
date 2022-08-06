@@ -11,6 +11,8 @@ use PriorityInbox\EmailUpdate;
 class GmailDAO
 {
     const GMAIL_USER = "me";
+    const FORMAT_KEY = 'format';
+    const FORMAT_RAW = 'raw';
     private Gmail $gmail;
 
     /**
@@ -27,10 +29,20 @@ class GmailDAO
      */
     public function getFilteredMessageList(array $filters = []) : array
     {
-        return $this
+        $retrievedMessages = $this
             ->getUserMessages()
-            ->listUsersMessages(self::GMAIL_USER, array_map(fn(EmailFilter $filter) => $filter->getExpression(), $filters))
+            ->listUsersMessages(self::GMAIL_USER, current(array_map(fn(EmailFilter $filter) => $filter->getExpression(), $filters)))
             ->getMessages();
+
+        $return = [];
+
+        foreach ($retrievedMessages as $retrievedMessage) {
+            $return[] = $this
+                ->getUserMessages()
+                ->get( self::GMAIL_USER, $retrievedMessage->getId(), [ self::FORMAT_KEY => self::FORMAT_RAW] );
+        }
+
+        return $return;
     }
 
     /**
