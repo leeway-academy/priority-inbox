@@ -17,6 +17,7 @@ use PriorityInbox\Sender;
 class GmailRepository implements EmailRepository
 {
     private GmailDAO $gmail;
+
     private Parser $parser;
 
     /**
@@ -52,10 +53,9 @@ class GmailRepository implements EmailRepository
     public function updateEmail(Email $email): void
     {
         $this
-            ->gmail
+            ->getGmail()
             ->modifyMessage($email->id(), $this->buildUpdate($email));
     }
-
 
     /**
      * @param mixed $message
@@ -80,6 +80,7 @@ class GmailRepository implements EmailRepository
         return $email;
     }
 
+
     /**
      * @param array<EmailFilter> $filters
      * @return Message[]
@@ -99,12 +100,19 @@ class GmailRepository implements EmailRepository
     {
         $emailUpdate = new EmailUpdate();
 
-        foreach ($email->addedLabels() as $addedLabel) {
-            $emailUpdate->addLabel($addedLabel);
+        $addedLabels = $email->addedLabels();
+        $removedLabels = $email->removedLabels();
+
+        foreach ($addedLabels as $addedLabel) {
+            if (!in_array($addedLabel, $removedLabels)) {
+                $emailUpdate->addLabel($addedLabel);
+            }
         }
 
-        foreach ($email->removedLabels() as $removedLabel) {
-            $emailUpdate->removeLabel($removedLabel);
+        foreach ($removedLabels as $removedLabel) {
+            if (!in_array($removedLabel, $addedLabels)) {
+                $emailUpdate->removeLabel($removedLabel);
+            }
         }
 
         return $emailUpdate;
@@ -166,5 +174,13 @@ class GmailRepository implements EmailRepository
     private function decodeMessage(Message $message) : string
     {
         return base64_decode(str_replace(['-', '_'], ['+', '/'], $message->getRaw()));
+    }
+
+    /**
+     * @return GmailDAO
+     */
+    protected function getGmail(): GmailDAO
+    {
+        return $this->gmail;
     }
 }
