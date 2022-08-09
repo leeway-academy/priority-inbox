@@ -4,26 +4,30 @@ namespace PriorityInbox\Command;
 
 use Exception;
 use Google\Client;
+use Google\Client as GoogleClient;
 use Google\Exception as GoogleException;
 use Google\Service\Gmail;
-use Google\Client as GoogleClient;
 use PhpMimeMailParser\Parser;
 use PriorityInbox\EmailPriorityMover;
 use PriorityInbox\Label;
 use PriorityInbox\Providers\GmailDAO;
 use PriorityInbox\Providers\GmailRepository;
+use PriorityInbox\Sender;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
 
 #[AsCommand(name: "release-email")]
 class ReleaseEmailCommand extends Command
 {
     private EmailPriorityMover $emailPriorityMover;
+    private NullLogger|ConsoleLogger $logger;
 
     protected function configure(): void
     {
@@ -48,9 +52,8 @@ class ReleaseEmailCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $io = new SymfonyStyle($input, $output);
-        $io->writeln("Fetching emails in OOP way!");
-
+        $this->setupLogger($input->getOption('verbose'), $output);
+        $this->getLogger()->info("Fetching emails in OOP way!");
         $this->setupEmailMover($input);
         $this->fillInbox();
 
@@ -58,55 +61,25 @@ class ReleaseEmailCommand extends Command
     }
 
     /**
+     * @param EmailPriorityMover $emailPriorityMover
+     * @return void
+     */
+    protected function setEmailPriorityMover(EmailPriorityMover $emailPriorityMover): void
+    {
+        $this->emailPriorityMover = $emailPriorityMover;
+    }
+    /**
      * @param InputInterface $input
      * @return void
      * @throws GoogleException
      */
     private function setupEmailMover(InputInterface $input): void
     {
-        $gmailDAO = new GmailDAO(new Gmail($this->buildGmailClient(
-            $input->getArgument('application-name'),
-            $input->getArgument('client-secret-path'),
-            $input->getArgument('client-credentials-path')
-        )));
-        $gmailRepository = new GmailRepository($gmailDAO, new Parser());
-
-        $this->emailPriorityMover = new EmailPriorityMover(
-            $gmailRepository,
-            new Label($input->getArgument('hidden-label-id'))
-        );
-
-        if ($minDelay = $input->getOption('minimum-delay')) {
-            $this->emailPriorityMover->setMinimumDelay($minDelay);
-        }
-
-        if ($whiteList = $input->getOption('white-list')) {
-            foreach ($whiteList as $whiteListFile) {
-                if (is_readable($whiteListFile)) {
-                    foreach (file($whiteListFile) as $allowedSender) {
-                        $this->emailPriorityMover->addAllowedSender($allowedSender);
-                    }
-                } else {
-                    $this->emailPriorityMover->addAllowedSender($whiteList);
-                }
-            }
-        }
-
-        if ($blackList = $input->getOption('black-list')) {
-            foreach ($blackList as $blackListFile) {
-                if (is_readable($blackListFile)) {
-                    foreach (file($blackListFile) as $allowedSender) {
-                        $this->emailPriorityMover->addNotAllowedSender($allowedSender);
-                    }
-                } else {
-                    $this->emailPriorityMover->addNotAllowedSender($blackList);
-                }
-            }
-        }
-
-        if ($input->getOption('dry-run')) {
-            $this->emailPriorityMover->setDryRun(true);
-        }
+        $this->setEmailPriorityMover($this->buildEmailPriorityMover($input));
+        $this->setupMinimumDelay($input);
+        $this->setupWhiteList($input);
+        $this->setupBlackList($input);
+        $this->setupDryRunMode($input);
     }
 
     /**
@@ -115,8 +88,7 @@ class ReleaseEmailCommand extends Command
      */
     private function fillInbox(): void
     {
-        $this
-            ->emailPriorityMover
+        $this->getEmailPriorityMover()
             ->fillInbox();
     }
 
@@ -186,5 +158,214 @@ class ReleaseEmailCommand extends Command
             $client->fetchAccessTokenWithRefreshToken($client->getRefreshToken());
             $this->storeAccessTokenData($credentialsPath, $client->getAccessToken());
         }
+    }
+
+    /**
+     * @param array<string> $blackList
+     * @return void
+     */
+    private function addNotAllowedSendersFromArray(array $blackList): void
+    {
+        foreach ($blackList as $blackListFile) {
+            $this->addNotAllowedSendersFrom($blackListFile);
+        }
+    }
+
+    /**
+     * @param string $blackList
+     * @return void
+     */
+    private function addNotAllowedSender(string $blackList): void
+    {
+        $this->getEmailPriorityMover()
+            ->addNotAllowedSender(new Sender($blackList));
+    }
+
+    /**
+     * @param string $blackListFileName
+     * @return void
+     */
+    private function addNotAllowedSendersFromFile(string $blackListFileName): void
+    {
+        foreach (file($blackListFileName) as $notAllowedSender) {
+            $this->addNotAllowedSender($notAllowedSender);
+        }
+    }
+
+    /**
+     * @param string $blackListFile
+     * @return void
+     */
+    private function addNotAllowedSendersFrom(string $blackListFile): void
+    {
+        if (is_readable($blackListFile)) {
+            $this->addNotAllowedSendersFromFile($blackListFile);
+        } else {
+            $this->addNotAllowedSender($blackListFile);
+        }
+    }
+
+    /**
+     * @param array<string> $whiteList
+     * @return void
+     */
+    private function addAllowedSendersFromArray(array $whiteList): void
+    {
+        foreach ($whiteList as $whiteListFile) {
+            $this->addAllowedSendersFrom($whiteListFile);
+        }
+    }
+
+    /**
+     * @param string $sender
+     * @return void
+     */
+    private function addAllowedSender(string $sender): void
+    {
+        $this->getEmailPriorityMover()
+            ->addAllowedSender(new Sender($sender));
+    }
+
+    /**
+     * @param string $whiteListFileName
+     * @return void
+     */
+    private function addAllowedSendersFromFile(string $whiteListFileName): void
+    {
+        foreach (file($whiteListFileName) as $sender) {
+            $this->addAllowedSender($sender);
+        }
+    }
+
+    /**
+     * @param string $whiteListFileName
+     * @return void
+     */
+    private function addAllowedSendersFrom(string $whiteListFileName): void
+    {
+        if (is_readable($whiteListFileName)) {
+            $this->addAllowedSendersFromFile($whiteListFileName);
+        } else {
+            $this->addAllowedSender($whiteListFileName);
+        }
+    }
+
+    /**
+     * @param bool $verbose
+     * @param OutputInterface $output
+     * @return void
+     */
+    private function setupLogger(bool $verbose, OutputInterface $output): void
+    {
+        $this->logger = $verbose ? new ConsoleLogger($output) : new NullLogger();
+    }
+
+    /**
+     * @return LoggerInterface
+     */
+    protected function getLogger(): LoggerInterface
+    {
+        return $this->logger;
+    }
+
+    /**
+     * @return EmailPriorityMover
+     */
+    private function getEmailPriorityMover(): EmailPriorityMover
+    {
+        return $this->emailPriorityMover;
+    }
+
+    /**
+     * @param InputInterface $input
+     * @return void
+     */
+    private function setupDryRunMode(InputInterface $input): void
+    {
+        if ($input->getOption('dry-run')) {
+            $this
+                ->getLogger()
+                ->info("Running in dry mode");
+            $this
+                ->getEmailPriorityMover()
+                ->setDryRun(true);
+        }
+    }
+
+    /**
+     * @param InputInterface $input
+     * @return void
+     */
+    private function setupBlackList(InputInterface $input): void
+    {
+        if ($blackList = $input->getOption('black-list')) {
+            $this
+                ->getLogger()
+                ->info("Rejecting emails from: " . implode(", ", $blackList));
+            if (is_array($blackList)) {
+                $this->addNotAllowedSendersFromArray($blackList);
+            } else {
+                $this->addNotAllowedSender($blackList);
+            }
+        }
+    }
+
+    /**
+     * @param InputInterface $input
+     * @return void
+     */
+    private function setupWhiteList(InputInterface $input): void
+    {
+        if ($whiteList = $input->getOption('white-list')) {
+            $this
+                ->getLogger()
+                ->info("Allowing emails from: " . implode(", ", $whiteList));
+            if (is_array($whiteList)) {
+                $this->addAllowedSendersFromArray($whiteList);
+            } else {
+                $this->addAllowedSender($whiteList);
+            }
+        }
+    }
+
+    /**
+     * @param InputInterface $input
+     * @return void
+     */
+    private function setupMinimumDelay(InputInterface $input): void
+    {
+        if ($minDelay = $input->getOption('minimum-delay')) {
+            $this
+                ->getEmailPriorityMover()
+                ->setMinimumDelay($minDelay);
+            $this
+                ->getLogger()
+                ->info("Minimum delay: " . $minDelay);
+        }
+    }
+
+    /**
+     * @param InputInterface $input
+     * @return EmailPriorityMover
+     * @throws GoogleException
+     */
+    private function buildEmailPriorityMover(InputInterface $input): EmailPriorityMover
+    {
+        $applicationName = $input->getArgument('application-name');
+        $clientSecretPath = $input->getArgument('client-secret-path');
+        $credentialsPath = $input->getArgument('client-credentials-path');
+
+        $this->getLogger()->info("Application name: ".$applicationName);
+        $this->getLogger()->info("Client secret path: ".$clientSecretPath);
+        $this->getLogger()->info("Client credentials path: ".$credentialsPath);
+
+        return new EmailPriorityMover(
+            new GmailRepository(new GmailDAO(new Gmail($this->buildGmailClient(
+                $applicationName,
+                $clientSecretPath,
+                $credentialsPath
+            ))), new Parser()),
+            new Label($input->getArgument('hidden-label-id'))
+        );
     }
 }
