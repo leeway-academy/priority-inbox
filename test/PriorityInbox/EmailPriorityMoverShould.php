@@ -5,6 +5,7 @@ namespace PriorityInbox;
 use DateTimeImmutable;
 use Exception;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 /**
  * @todo Refactor: the tests should be:
@@ -19,6 +20,7 @@ class EmailPriorityMoverShould extends TestCase
 
     private EmailRepository $emailRepository;
     private EmailPriorityMover $emailPriorityMover;
+    private LoggerInterface $logger;
 
     /**
      * @test
@@ -214,6 +216,7 @@ class EmailPriorityMoverShould extends TestCase
     /**
      * @test
      * @dataProvider provideEmailDetails
+     * @throws Exception
      */
     public function update_emails_in_repository(EmailId $emailId, Sender $sender): void
     {
@@ -230,6 +233,22 @@ class EmailPriorityMoverShould extends TestCase
             ->expects($this->once())
             ->method('updateEmail')
             ->with($this->equalTo($email));
+
+        $this
+            ->emailPriorityMover
+            ->fillInbox();
+    }
+
+    /**
+     * @test
+     * @throws Exception
+     */
+    public function use_logger(): void
+    {
+        $this->logger
+            ->expects($this->atLeast(1))
+            ->method('info')
+            ;
 
         $this
             ->emailPriorityMover
@@ -262,7 +281,14 @@ class EmailPriorityMoverShould extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->emailRepository = $this->createMock(EmailRepository::class);
-        $this->emailPriorityMover = new EmailPriorityMover($this->emailRepository, new Label(self::HIDDEN_EMAILS_LABEL_ID));
+        $this->emailRepository = $this
+            ->createMock(EmailRepository::class);
+        $this->logger = $this
+            ->createMock(LoggerInterface::class);
+        $this->emailPriorityMover = new EmailPriorityMover(
+            $this->emailRepository,
+            new Label(self::HIDDEN_EMAILS_LABEL_ID),
+            $this->logger
+        );
     }
 }

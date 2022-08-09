@@ -3,6 +3,7 @@
 namespace PriorityInbox;
 
 use Exception;
+use Psr\Log\LoggerInterface;
 
 class EmailPriorityMover
 {
@@ -19,15 +20,18 @@ class EmailPriorityMover
     private array $notAllowedSenders = [];
     private int $minimumDelay = 0;
     private bool $dryRun = false;
+    private LoggerInterface $logger;
 
     /**
      * @param EmailRepository $emailRepository
      * @param Label $hiddenLabel
+     * @param LoggerInterface $logger
      */
-    public function __construct(EmailRepository $emailRepository, Label $hiddenLabel)
+    public function __construct(EmailRepository $emailRepository, Label $hiddenLabel, LoggerInterface $logger)
     {
         $this->emailRepository = $emailRepository;
         $this->hiddenLabel = $hiddenLabel;
+        $this->logger = $logger;
     }
 
     /**
@@ -47,7 +51,11 @@ class EmailPriorityMover
      */
     public function fillInbox(): void
     {
-        foreach($this->fetchHiddenEmails() as $hiddenEmail) {
+        $this
+            ->getLogger()
+            ->info('Fetching emails')
+        ;
+        foreach ($this->fetchHiddenEmails() as $hiddenEmail) {
             $this->moveToInboxIfMovable($hiddenEmail);
         }
     }
@@ -67,17 +75,26 @@ class EmailPriorityMover
      * @param Email $email
      * @return void
      */
-    private function moveToInbox(Email $email) : void
+    private function moveToInbox(Email $email): void
     {
+        $this
+            ->getLogger()
+            ->debug("Adding label INBOX");
         $email->addLabel(new Label(self::INBOX));
+        $this
+            ->getLogger()
+            ->debug("Removing label ".$this->getHiddenLabel());
         $email->removeLabel($this->getHiddenLabel());
+        $this
+            ->getLogger()
+            ->debug("Updating email in repository");
         $this->updateEmail($email);
     }
 
     /**
      * @return array<Email>
      */
-    private function fetchHiddenEmails() : array
+    private function fetchHiddenEmails(): array
     {
         return $this
             ->fetchEmailsLabeled(
@@ -88,7 +105,7 @@ class EmailPriorityMover
     /**
      * @return Label
      */
-    private function getHiddenLabel() : Label
+    private function getHiddenLabel(): Label
     {
         return $this->hiddenLabel;
     }
@@ -101,8 +118,7 @@ class EmailPriorityMover
     {
         return $this
             ->emailRepository
-            ->fetch([new LabelFilter($label)])
-            ;
+            ->fetch([new LabelFilter($label)]);
     }
 
     /**
@@ -113,6 +129,10 @@ class EmailPriorityMover
     private function moveToInboxIfMovable(Email $hiddenEmail): void
     {
         if ($this->shouldBeMoved($hiddenEmail)) {
+            $this
+                ->getLogger()
+                ->info('Found one email from '.$hiddenEmail->sender().' sent at '.$hiddenEmail->sentAt()->format('d-M-Y H:i:s').': will be moved to inbox')
+            ;
             $this->moveToInbox($hiddenEmail);
         }
     }
@@ -190,5 +210,13 @@ class EmailPriorityMover
         $this->dryRun = $newValue;
 
         return $this;
+    }
+
+    /**
+     * @return LoggerInterface
+     */
+    private function getLogger(): LoggerInterface
+    {
+        return $this->logger;
     }
 }

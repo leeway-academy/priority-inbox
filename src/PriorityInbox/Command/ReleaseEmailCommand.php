@@ -88,7 +88,12 @@ class ReleaseEmailCommand extends Command
      */
     private function fillInbox(): void
     {
-        $this->getEmailPriorityMover()
+        $this
+            ->getLogger()
+            ->info("Starting email moving")
+        ;
+        $this
+            ->getEmailPriorityMover()
             ->fillInbox();
     }
 
@@ -365,7 +370,8 @@ class ReleaseEmailCommand extends Command
                 $clientSecretPath,
                 $credentialsPath
             ))), new Parser()),
-            new Label($input->getArgument('hidden-label-id'))
+            new Label($input->getArgument('hidden-label-id')),
+            $this->getLogger()
         );
     }
 }
