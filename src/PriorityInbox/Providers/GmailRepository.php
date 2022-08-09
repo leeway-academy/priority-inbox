@@ -7,11 +7,12 @@ use Exception;
 use Google\Service\Gmail\Message;
 use PhpMimeMailParser\Parser;
 use PriorityInbox\Email;
-use PriorityInbox\Sender;
 use PriorityInbox\EmailFilter;
 use PriorityInbox\EmailId;
 use PriorityInbox\EmailRepository;
 use PriorityInbox\EmailUpdate;
+use PriorityInbox\Label;
+use PriorityInbox\Sender;
 
 class GmailRepository implements EmailRepository
 {
@@ -37,7 +38,8 @@ class GmailRepository implements EmailRepository
         $emails = [];
 
         foreach ($this->getGmailMessages($filters) as $message) {
-            $emails[] = $this->buildEmailFrom($message);
+            $email = $this->buildEmailFrom($message);
+            $emails[] = $email;
         }
 
         return $emails;
@@ -65,11 +67,17 @@ class GmailRepository implements EmailRepository
             ->parser()
             ->setText($this->decodeMessage($message));
 
-        return new Email(
+        $email = new Email(
             $this->getEmailIdFrom($message),
             $this->getSenderFromParsedData(),
             $this->getSentAtFromParsedData(),
         );
+
+        foreach ($message->getLabelIds() as $labelId) {
+            $email->addLabel(new Label($labelId));
+        }
+
+        return $email;
     }
 
     /**

@@ -3,15 +3,15 @@
 namespace PriorityInbox\Providers;
 
 use DateTimeImmutable;
+use Google\Service\Gmail\Message;
 use PhpMimeMailParser\Parser;
 use PHPUnit\Framework\TestCase;
 use PriorityInbox\Email;
-use PriorityInbox\Sender;
 use PriorityInbox\EmailId;
 use PriorityInbox\EmailUpdate;
 use PriorityInbox\Label;
 use PriorityInbox\LabelFilter;
-use Google\Service\Gmail\Message;
+use PriorityInbox\Sender;
 
 class GmailRepositoryShould extends TestCase
 {
@@ -106,7 +106,6 @@ class GmailRepositoryShould extends TestCase
         $sender = new Sender(self::SENDER_ADDRESS);
         $sentAt = new DateTimeImmutable();
 
-
         $labelToAdd = new Label(self::LABEL_ADD_THIS);
         $labelToRemove = new Label(self::LABEL_REMOVE_THIS);
 
@@ -137,6 +136,32 @@ class GmailRepositoryShould extends TestCase
             ->updateEmail($email);
     }
 
+    /**
+     * @test
+     */
+    public function assign_initial_labels_to_emails(): void
+    {
+        $message = new Message();
+        $message->setId("MyId");
+        $message->setRaw("raw");
+        $labelId = "label_id";
+        $message->setLabelIds([$labelId]);
+
+        $this
+            ->gmailDAO
+            ->method('getFilteredMessageList')
+            ->willReturn([$message])
+        ;
+
+        $emails = $this
+            ->gmailRepository
+            ->fetch()
+        ;
+
+        foreach ($emails as $email) {
+            $this->assertContainsEquals(new Label($labelId), $email->labels());
+        }
+    }
     /**
      * @return array[]
      */
