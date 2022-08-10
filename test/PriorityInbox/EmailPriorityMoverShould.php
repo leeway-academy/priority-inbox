@@ -63,6 +63,39 @@ class EmailPriorityMoverShould extends TestCase
      * @dataProvider provideEmailDetails
      * @throws Exception
      */
+    public function use_partial_match_for_evaluating_senders(EmailId $emailId, Sender $sender): void
+    {
+        $emailFromAllowedSender = new Email($emailId, $sender, new DateTimeImmutable());
+        $inboxLabel = new Label(self::INBOX_LABEL_ID);
+        $hiddenLabel = new Label(self::HIDDEN_EMAILS_LABEL_ID);
+
+        $emailFromAllowedSender
+            ->addLabel($hiddenLabel)
+        ;
+
+        $this
+            ->emailRepository
+            ->method('fetch')
+            ->willReturn([$emailFromAllowedSender])
+        ;
+
+        $this
+            ->emailPriorityMover
+            ->addAllowedSender(new Sender(substr($sender, 1, strlen($sender) - 2)))
+            ->fillInbox()
+        ;
+
+        $labelsAfter = $emailFromAllowedSender->labels();
+        $this->assertContainsEquals($inboxLabel, $labelsAfter);
+        $this->assertNotContainsEquals($hiddenLabel, $labelsAfter);
+    }
+    /**
+     * @test
+     * @param EmailId $emailId
+     * @param Sender $sender
+     * @dataProvider provideEmailDetails
+     * @throws Exception
+     */
     public function not_move_emails_not_sent_by_allowed_senders(EmailId $emailId, Sender $sender): void
     {
         $inboxLabel = new Label(self::INBOX_LABEL_ID);
