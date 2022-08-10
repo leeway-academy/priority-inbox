@@ -23,8 +23,8 @@ class Sender
      * @param Sender $other
      * @return bool
      */
-    public function matches(Sender $other) : bool
+    public function matches(Sender $other): bool
     {
-        return str_contains($other->value, $this->value );
+        return str_contains($other->value, $this->value);
     }
 }

@@ -36,20 +36,17 @@ class EmailPriorityMoverShould extends TestCase
         $hiddenLabel = new Label(self::HIDDEN_EMAILS_LABEL_ID);
 
         $emailFromAllowedSender
-            ->addLabel($hiddenLabel)
-            ;
+            ->addLabel($hiddenLabel);
 
         $this
             ->emailRepository
             ->method('fetch')
-            ->willReturn([$emailFromAllowedSender])
-        ;
+            ->willReturn([$emailFromAllowedSender]);
 
         $this
             ->emailPriorityMover
             ->addAllowedSender($sender)
-            ->fillInbox()
-        ;
+            ->fillInbox();
 
         $labelsAfter = $emailFromAllowedSender->labels();
         $this->assertContainsEquals($inboxLabel, $labelsAfter);
@@ -66,29 +63,35 @@ class EmailPriorityMoverShould extends TestCase
     public function use_partial_match_for_evaluating_senders(EmailId $emailId, Sender $sender): void
     {
         $emailFromAllowedSender = new Email($emailId, $sender, new DateTimeImmutable());
+        $emailFromNotAllowedSender = new Email($emailId, new Sender(strrev($sender)), new DateTimeImmutable());
         $inboxLabel = new Label(self::INBOX_LABEL_ID);
         $hiddenLabel = new Label(self::HIDDEN_EMAILS_LABEL_ID);
 
         $emailFromAllowedSender
-            ->addLabel($hiddenLabel)
-        ;
+            ->addLabel($hiddenLabel);
+        $emailFromNotAllowedSender
+            ->addLabel($hiddenLabel);
 
         $this
             ->emailRepository
             ->method('fetch')
-            ->willReturn([$emailFromAllowedSender])
-        ;
+            ->willReturn([$emailFromAllowedSender, $emailFromNotAllowedSender]);
 
         $this
             ->emailPriorityMover
             ->addAllowedSender(new Sender(substr($sender, 1, strlen($sender) - 2)))
-            ->fillInbox()
-        ;
+            ->fillInbox();
 
         $labelsAfter = $emailFromAllowedSender->labels();
         $this->assertContainsEquals($inboxLabel, $labelsAfter);
         $this->assertNotContainsEquals($hiddenLabel, $labelsAfter);
+
+        $labelsAfter = $emailFromNotAllowedSender->labels();
+        $this->assertNotContainsEquals($inboxLabel, $labelsAfter);
+        $this->assertContainsEquals($hiddenLabel, $labelsAfter);
+
     }
+
     /**
      * @test
      * @param EmailId $emailId
@@ -205,25 +208,23 @@ class EmailPriorityMoverShould extends TestCase
         $this
             ->emailRepository
             ->method('fetch')
-            ->willReturn([$email])
-            ;
+            ->willReturn([$email]);
 
         $this
             ->emailRepository
             ->expects($this->never())
-            ->method('updateEmail')
-            ;
+            ->method('updateEmail');
 
         $this
             ->emailPriorityMover
             ->addAllowedSender($sender)
-            ->setDryRun(true)
-            ;
+            ->setDryRun(true);
 
         $this
             ->emailPriorityMover
             ->fillInbox();
     }
+
     /**
      * @test
      * @param int $minDelay
@@ -286,8 +287,7 @@ class EmailPriorityMoverShould extends TestCase
     {
         $this->logger
             ->expects($this->atLeast(1))
-            ->method('info')
-            ;
+            ->method('info');
 
         $this
             ->emailPriorityMover
