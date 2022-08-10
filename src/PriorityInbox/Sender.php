@@ -18,4 +18,13 @@ class Sender
     {
         return $this->value;
     }
+
+    /**
+     * @param Sender $other
+     * @return bool
+     */
+    public function matches(Sender $other) : bool
+    {
+        return str_contains($other->value, $this->value );
+    }
 }

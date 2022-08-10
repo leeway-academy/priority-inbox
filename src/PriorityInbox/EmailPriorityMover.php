@@ -55,7 +55,16 @@ class EmailPriorityMover
             ->getLogger()
             ->info('Fetching emails')
         ;
-        foreach ($this->fetchHiddenEmails() as $hiddenEmail) {
+
+        $hiddenEmails = $this->fetchHiddenEmails();
+
+        $this
+            ->getLogger()
+            ->info("Found ".count($hiddenEmails)." emails to process");
+        foreach ($hiddenEmails as $hiddenEmail) {
+            $this
+                ->getLogger()
+                ->debug("Found message coming from ".$hiddenEmail->sender()." sent at ".$hiddenEmail->sentAt()->format("d-M-Y"));
             $this->moveToInboxIfMovable($hiddenEmail);
         }
     }
@@ -77,6 +86,10 @@ class EmailPriorityMover
      */
     private function moveToInbox(Email $email): void
     {
+        $this
+            ->getLogger()
+            ->info("Moving email from ".$email->sender()." sent at ".$email->sentAt()->format("d-M-Y")." to Inbox")
+        ;
         $this
             ->getLogger()
             ->debug("Adding label INBOX");
@@ -155,7 +168,19 @@ class EmailPriorityMover
      */
     private function wasSentByAllowedSender(Email $hiddenEmail): bool
     {
-        return !$this->allowedSenders || in_array($hiddenEmail->sender(), $this->allowedSenders);
+        if (!$this->allowedSenders) {
+
+            return true;
+        }
+
+        foreach ($this->allowedSenders as $allowedSender) {
+            if ($allowedSender->matches($hiddenEmail->sender())) {
+
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
