@@ -51,7 +51,7 @@ class Email
      */
     public function addLabel(Label $newLabel): self
     {
-        $this->labels[] = $this->addedLabels[] = $newLabel;
+        $this->labels[$newLabel->id()] = $this->addedLabels[$newLabel->id()] = $newLabel;
 
         return $this;
     }
@@ -78,14 +78,9 @@ class Email
      */
     public function removeLabel(Label $toRemove): void
     {
-        foreach ($this->labels as $k => $label) {
-            if ($label == $toRemove) {
-                unset($this->labels[$k]);
-                $this->removedLabels[] = $toRemove;
-
-                break;
-            }
-        }
+        $this->removedLabels[$toRemove->id()] = $toRemove;
+        $this->removeFromCurrentLabels($toRemove);
+        $this->removeFromAddedLabels($toRemove);
     }
 
     /**
@@ -119,5 +114,23 @@ class Email
     public function sentAt(): DateTimeImmutable
     {
         return $this->sentAt;
+    }
+
+    /**
+     * @param Label $toRemove
+     * @return void
+     */
+    private function removeFromCurrentLabels(Label $toRemove): void
+    {
+        unset($this->labels[$toRemove->id()]);
+    }
+
+    /**
+     * @param Label $toRemove
+     * @return void
+     */
+    private function removeFromAddedLabels(Label $toRemove): void
+    {
+        unset($this->addedLabels[$toRemove->id()]);
     }
 }
