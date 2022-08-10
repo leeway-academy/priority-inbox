@@ -35,15 +35,21 @@ class EmailPriorityMoverShould extends TestCase
         $inboxLabel = new Label(self::INBOX_LABEL_ID);
         $hiddenLabel = new Label(self::HIDDEN_EMAILS_LABEL_ID);
 
+        $emailFromAllowedSender
+            ->addLabel($hiddenLabel)
+            ;
+
         $this
             ->emailRepository
             ->method('fetch')
-            ->willReturn([$emailFromAllowedSender]);
+            ->willReturn([$emailFromAllowedSender])
+        ;
 
         $this
             ->emailPriorityMover
             ->addAllowedSender($sender)
-            ->fillInbox();
+            ->fillInbox()
+        ;
 
         $labelsAfter = $emailFromAllowedSender->labels();
         $this->assertContainsEquals($inboxLabel, $labelsAfter);

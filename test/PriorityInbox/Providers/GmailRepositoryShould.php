@@ -52,6 +52,7 @@ class GmailRepositoryShould extends TestCase
         $message = new Message();
         $message->setId("MyId");
         $message->setRaw("raw");
+        $message->setLabelIds(["some_label"]);
 
         $this
             ->gmailDAO
@@ -75,8 +76,8 @@ class GmailRepositoryShould extends TestCase
     {
         $message = new Message();
         $message->setId("MyId");
-        $message->setRaw(
-            $rawData);
+        $message->setRaw($rawData);
+        $message->setLabelIds(['some_label']);
 
         $this
             ->gmailDAO
@@ -131,10 +132,12 @@ class GmailRepositoryShould extends TestCase
     /**
      * @test
      */
-    public function not_add_and_remove_the_same_label(): void
+    public function remove_labels_that_must_be_removed(): void
     {
         $label = new Label("a label");
-        $emailUpdate = (new EmailUpdate());
+
+        $emailUpdate = (new EmailUpdate())
+            ->removeLabel($label);
 
         $emailId = new EmailId("emailId");
         $this
@@ -145,9 +148,7 @@ class GmailRepositoryShould extends TestCase
 
         $email = new Email($emailId, new Sender("someone@domain.com"), new DateTimeImmutable());
         $email
-            ->addLabel($label)
-            ->removeLabel($label)
-        ;
+            ->removeLabel($label);
 
         $this
             ->gmailRepository
