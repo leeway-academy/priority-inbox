@@ -51,4 +51,30 @@ class EmailUpdate
 
         return $this;
     }
+
+    /**
+     * @param array<Label> $addedLabels
+     * @return EmailUpdate
+     */
+    public function setAddedLabels(array $addedLabels): self
+    {
+        foreach ($addedLabels as $addedLabel) {
+            $this->addLabel($addedLabel);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param array<Label> $removedLabels
+     * @return $this
+     */
+    public function setRemovedLabels(array $removedLabels): self
+    {
+        foreach ($removedLabels as $removedLabel) {
+            $this->removeLabel($removedLabel);
+        }
+
+        return $this;
+    }
 }

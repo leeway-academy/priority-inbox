@@ -100,20 +100,10 @@ class GmailRepository implements EmailRepository
     {
         $emailUpdate = new EmailUpdate();
 
-        $addedLabels = $email->addedLabels();
-        $removedLabels = $email->removedLabels();
-
-        foreach ($addedLabels as $addedLabel) {
-            if (!in_array($addedLabel, $removedLabels)) {
-                $emailUpdate->addLabel($addedLabel);
-            }
-        }
-
-        foreach ($removedLabels as $removedLabel) {
-            if (!in_array($removedLabel, $addedLabels)) {
-                $emailUpdate->removeLabel($removedLabel);
-            }
-        }
+        $emailUpdate
+            ->setAddedLabels($email->addedLabels())
+            ->setRemovedLabels($email->removedLabels())
+        ;
 
         return $emailUpdate;
     }
@@ -171,7 +161,7 @@ class GmailRepository implements EmailRepository
      * @param Message $message
      * @return string
      */
-    private function decodeMessage(Message $message) : string
+    private function decodeMessage(Message $message): string
     {
         return base64_decode(str_replace(['-', '_'], ['+', '/'], $message->getRaw()));
     }
