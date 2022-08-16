@@ -13,7 +13,7 @@ class EmailPriorityMover
     /**
      * @var array <Sender>
      */
-    private array $allowedSenders = [];
+    private array $allowedSenderPatterns = [];
     /**
      * @var array <Sender>
      */
@@ -35,12 +35,12 @@ class EmailPriorityMover
     }
 
     /**
-     * @param Sender $sender
+     * @param SenderPattern $pattern
      * @return $this
      */
-    public function addAllowedSender(Sender $sender): self
+    public function addAllowedSenderPattern(SenderPattern $pattern): self
     {
-        $this->allowedSenders[] = $sender;
+        $this->allowedSenderPatterns[] = $pattern;
 
         return $this;
     }
@@ -130,7 +130,7 @@ class EmailPriorityMover
     private function fetchEmailsLabeled(Label $label): array
     {
         return $this
-            ->emailRepository
+            ->getEmailRepository()
             ->fetch([new LabelFilter($label)]);
     }
 
@@ -168,19 +168,7 @@ class EmailPriorityMover
      */
     private function wasSentByAllowedSender(Email $hiddenEmail): bool
     {
-        if (!$this->allowedSenders) {
-
-            return true;
-        }
-
-        foreach ($this->allowedSenders as $allowedSender) {
-            if ($allowedSender->matches($hiddenEmail->sender())) {
-
-                return true;
-            }
-        }
-
-        return false;
+        return empty($this->allowedSenderPatterns) || $this->senderBelongsToWhiteList($hiddenEmail->sender());
     }
 
     /**
@@ -189,7 +177,7 @@ class EmailPriorityMover
      */
     private function wasSentByNotAllowedSender(Email $hiddenEmail): bool
     {
-        return !empty($this->notAllowedSenders) && in_array($hiddenEmail->sender(), $this->notAllowedSenders);
+        return !empty($this->notAllowedSenders) && $this->senderBelongsToBlackList($hiddenEmail->sender());
     }
 
     /**
@@ -220,8 +208,7 @@ class EmailPriorityMover
     private function updateEmail(Email $email): void
     {
         if (!$this->dryRun) {
-            $this
-                ->emailRepository
+            $this->getEmailRepository()
                 ->updateEmail($email);
         }
     }
@@ -243,5 +230,46 @@ class EmailPriorityMover
     private function getLogger(): LoggerInterface
     {
         return $this->logger;
+    }
+
+    /**
+     * @param Sender $sender
+     * @return bool
+     */
+    private function senderBelongsToWhiteList(Sender $sender): bool
+    {
+        foreach ($this->allowedSenderPatterns as $allowedSenderPattern) {
+            if ($allowedSenderPattern->matches($sender)) {
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param Sender $sender
+     * @return bool
+     */
+    private function senderBelongsToBlackList(Sender $sender): bool
+    {
+        foreach ($this->notAllowedSenders as $notAllowedSender) {
+            if ($notAllowedSender->matches($sender)) {
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @return EmailRepository
+     */
+    private function getEmailRepository(): EmailRepository
+    {
+        return $this
+            ->emailRepository;
     }
 }

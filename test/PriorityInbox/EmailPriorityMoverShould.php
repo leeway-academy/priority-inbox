@@ -45,7 +45,7 @@ class EmailPriorityMoverShould extends TestCase
 
         $this
             ->emailPriorityMover
-            ->addAllowedSender($sender)
+            ->addAllowedSenderPattern(new SenderPattern($sender->value()))
             ->fillInbox();
 
         $labelsAfter = $emailFromAllowedSender->labels();
@@ -79,7 +79,7 @@ class EmailPriorityMoverShould extends TestCase
 
         $this
             ->emailPriorityMover
-            ->addAllowedSender(new Sender(substr($sender, 1, strlen($sender) - 2)))
+            ->addAllowedSenderPattern(new Sender(substr($sender, 1, strlen($sender) - 2)))
             ->fillInbox();
 
         $labelsAfter = $emailFromAllowedSender->labels();
@@ -94,18 +94,29 @@ class EmailPriorityMoverShould extends TestCase
 
     /**
      * @test
-     * @param EmailId $emailId
-     * @param Sender $sender
-     * @dataProvider provideEmailDetails
      * @throws Exception
      */
-    public function not_move_emails_not_sent_by_allowed_senders(EmailId $emailId, Sender $sender): void
+    public function not_move_emails_not_sent_by_allowed_senders(): void
     {
         $inboxLabel = new Label(self::INBOX_LABEL_ID);
         $hiddenLabel = new Label(self::HIDDEN_EMAILS_LABEL_ID);
 
-        $emailFromNotAllowedSender = new Email($emailId, new Sender($sender . "a"), new DateTimeImmutable());
-        $emailFromNotAllowedSender->addLabel($hiddenLabel);
+        $emailFromNotAllowedSender = $this->createMock(Email::class);
+        $emailFromNotAllowedSender
+            ->method('sender')
+            ->willReturn(new Sender('not_allowed@domain.com'))
+            ;
+
+        $emailFromNotAllowedSender
+            ->expects($this->never())
+            ->method('removeLabel')
+            ->with($this->equalTo($hiddenLabel))
+        ;
+        $emailFromNotAllowedSender
+            ->expects($this->never())
+            ->method('addLabel')
+            ->with($this->equalTo($inboxLabel))
+        ;
 
         $this
             ->emailRepository
@@ -114,13 +125,8 @@ class EmailPriorityMoverShould extends TestCase
 
         $this
             ->emailPriorityMover
-            ->addAllowedSender($sender)
+            ->addAllowedSenderPattern(new Sender('allowed@domain.com'))
             ->fillInbox();
-
-        $labelsAfter = $emailFromNotAllowedSender->labels();
-
-        $this->assertNotContainsEquals($inboxLabel, $labelsAfter);
-        $this->assertContainsEquals($hiddenLabel, $labelsAfter);
     }
 
     /**
@@ -142,7 +148,7 @@ class EmailPriorityMoverShould extends TestCase
 
         $this
             ->emailPriorityMover
-            ->addAllowedSender($sender)
+            ->addAllowedSenderPattern($sender)
             ->fillInbox();
 
         $this->assertContainsEquals($hiddenLabel, $emailFromNotAllowedSender->labels());
@@ -217,7 +223,7 @@ class EmailPriorityMoverShould extends TestCase
 
         $this
             ->emailPriorityMover
-            ->addAllowedSender($sender)
+            ->addAllowedSenderPattern($sender)
             ->setDryRun(true);
 
         $this
