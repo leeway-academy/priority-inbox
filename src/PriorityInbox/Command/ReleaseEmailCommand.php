@@ -12,7 +12,7 @@ use PriorityInbox\EmailPriorityMover;
 use PriorityInbox\Label;
 use PriorityInbox\Providers\GmailDAO;
 use PriorityInbox\Providers\GmailRepository;
-use PriorityInbox\Sender;
+use PriorityInbox\SenderPattern;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -169,31 +169,31 @@ class ReleaseEmailCommand extends Command
      * @param array<string> $blackList
      * @return void
      */
-    private function addNotAllowedSendersFromArray(array $blackList): void
+    private function addNotAllowedSenderPatternsFromArray(array $blackList): void
     {
         foreach ($blackList as $blackListFile) {
-            $this->addNotAllowedSendersFrom($blackListFile);
+            $this->addNotAllowedSenderPatternsFrom($blackListFile);
         }
     }
 
     /**
-     * @param string $blackList
+     * @param string $pattern
      * @return void
      */
-    private function addNotAllowedSender(string $blackList): void
+    private function addNotAllowedSenderPattern(string $pattern): void
     {
         $this->getEmailPriorityMover()
-            ->addNotAllowedSender(new Sender($blackList));
+            ->addNotAllowedSenderPattern(new SenderPattern($pattern));
     }
 
     /**
      * @param string $blackListFileName
      * @return void
      */
-    private function addNotAllowedSendersFromFile(string $blackListFileName): void
+    private function addNotAllowedSenderPatternsFromFile(string $blackListFileName): void
     {
         foreach (file($blackListFileName) as $notAllowedSender) {
-            $this->addNotAllowedSender($notAllowedSender);
+            $this->addNotAllowedSenderPattern($notAllowedSender);
         }
     }
 
@@ -201,12 +201,12 @@ class ReleaseEmailCommand extends Command
      * @param string $blackListFile
      * @return void
      */
-    private function addNotAllowedSendersFrom(string $blackListFile): void
+    private function addNotAllowedSenderPatternsFrom(string $blackListFile): void
     {
         if (is_readable($blackListFile)) {
-            $this->addNotAllowedSendersFromFile($blackListFile);
+            $this->addNotAllowedSenderPatternsFromFile($blackListFile);
         } else {
-            $this->addNotAllowedSender($blackListFile);
+            $this->addNotAllowedSenderPattern($blackListFile);
         }
     }
 
@@ -214,31 +214,31 @@ class ReleaseEmailCommand extends Command
      * @param array<string> $whiteList
      * @return void
      */
-    private function addAllowedSendersFromArray(array $whiteList): void
+    private function addAllowedSenderPatternsFromArray(array $whiteList): void
     {
         foreach ($whiteList as $whiteListFile) {
-            $this->addAllowedSendersFrom($whiteListFile);
+            $this->addAllowedSenderPatternsFrom($whiteListFile);
         }
     }
 
     /**
-     * @param string $sender
+     * @param string $pattern
      * @return void
      */
-    private function addAllowedSender(string $sender): void
+    private function addAllowedSenderPattern(string $pattern): void
     {
         $this->getEmailPriorityMover()
-            ->addAllowedSender(new Sender($sender));
+            ->addAllowedSenderPattern(new SenderPattern($pattern));
     }
 
     /**
      * @param string $whiteListFileName
      * @return void
      */
-    private function addAllowedSendersFromFile(string $whiteListFileName): void
+    private function addAllowedSenderPatternsFromFile(string $whiteListFileName): void
     {
         foreach (file($whiteListFileName) as $sender) {
-            $this->addAllowedSender($sender);
+            $this->addAllowedSenderPattern($sender);
         }
     }
 
@@ -246,12 +246,12 @@ class ReleaseEmailCommand extends Command
      * @param string $whiteListFileName
      * @return void
      */
-    private function addAllowedSendersFrom(string $whiteListFileName): void
+    private function addAllowedSenderPatternsFrom(string $whiteListFileName): void
     {
         if (is_readable($whiteListFileName)) {
-            $this->addAllowedSendersFromFile($whiteListFileName);
+            $this->addAllowedSenderPatternsFromFile($whiteListFileName);
         } else {
-            $this->addAllowedSender($whiteListFileName);
+            $this->addAllowedSenderPattern($whiteListFileName);
         }
     }
 
@@ -308,9 +308,9 @@ class ReleaseEmailCommand extends Command
                 ->getLogger()
                 ->info("Rejecting emails from: " . implode(", ", $blackList));
             if (is_array($blackList)) {
-                $this->addNotAllowedSendersFromArray($blackList);
+                $this->addNotAllowedSenderPatternsFromArray($blackList);
             } else {
-                $this->addNotAllowedSender($blackList);
+                $this->addNotAllowedSenderPattern($blackList);
             }
         }
     }
@@ -326,9 +326,9 @@ class ReleaseEmailCommand extends Command
                 ->getLogger()
                 ->info("Allowing emails from: " . implode(", ", $whiteList));
             if (is_array($whiteList)) {
-                $this->addAllowedSendersFromArray($whiteList);
+                $this->addAllowedSenderPatternsFromArray($whiteList);
             } else {
-                $this->addAllowedSender($whiteList);
+                $this->addAllowedSenderPattern($whiteList);
             }
         }
     }

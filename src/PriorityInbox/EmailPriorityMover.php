@@ -11,11 +11,11 @@ class EmailPriorityMover
     private Label $hiddenLabel;
     private EmailRepository $emailRepository;
     /**
-     * @var array <Sender>
+     * @var array <SenderPattern>
      */
     private array $allowedSenderPatterns = [];
     /**
-     * @var array <Sender>
+     * @var array <SenderPattern>
      */
     private array $notAllowedSenders = [];
     private int $minimumDelay = 0;
@@ -191,12 +191,12 @@ class EmailPriorityMover
     }
 
     /**
-     * @param Sender $sender
+     * @param SenderPattern $pattern
      * @return $this
      */
-    public function addNotAllowedSender(Sender $sender): self
+    public function addNotAllowedSenderPattern(SenderPattern $pattern): self
     {
-        $this->notAllowedSenders[] = $sender;
+        $this->notAllowedSenders[] = $pattern;
 
         return $this;
     }
