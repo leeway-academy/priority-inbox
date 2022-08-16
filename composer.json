@@ -21,7 +21,10 @@
     },
     "scripts": {
         "pre-autoload-dump": "Google\\Task\\Composer::cleanup",
-        "test": "vendor/bin/phpunit test --test-suffix Should.php"
+        "test": [
+            "Composer\\Config::disableProcessTimeout",
+            "vendor/bin/phpunit test --test-suffix Should.php"
+        ]
     },
     "extra": {
         "google/apiclient-services": [
