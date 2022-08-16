@@ -9,6 +9,21 @@ class SenderShould extends TestCase
 {
     /**
      * @test
+     */
+
+    public function recognize_full_matches(): void
+    {
+        $sender = new Sender("user1@domain.com");
+        $other = new Sender("user2@domain.com");
+        $this->assertFalse($sender->matches($other));
+
+        $sender = new Sender("user1@domain.com");
+        $other = new Sender("user1@domain.com");
+        $this->assertTrue($sender->matches($other));
+    }
+
+    /**
+     * @test
      * @param bool $expected
      * @param Sender $other
      * @dataProvider senderProvider
