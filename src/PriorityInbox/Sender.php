@@ -14,17 +14,19 @@ class Sender
         $this->value = $value;
     }
 
+    /**
+     * @return string
+     */
     public function __toString(): string
     {
-        return $this->value;
+        return $this->value();
     }
 
     /**
-     * @param Sender $other
-     * @return bool
+     * @return string
      */
-    public function matches(Sender $other): bool
+    public function value(): string
     {
-        return str_contains($other->value, $this->value);
+        return $this->value;
     }
 }
