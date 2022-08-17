@@ -1,19 +1,32 @@
 {
     "name": "leewayweb/inbox-pause",
+    "description": "A script to better manage a Gmail Inbox",
+    "license": "MIT",
     "authors": [
         {
             "name": "Mauro Chojrin",
             "email": "mauro.chojrin@leewayweb.com"
         }
     ],
+    "autoload": {
+        "psr-4": {
+            "PriorityInbox\\": "src/PriorityInbox/"
+        }
+    },
     "require": {
-        "php": ">= 8.0",
+        "php": ">= 8.1",
         "google/apiclient": "^2.0",
         "php-mime-mail-parser/php-mime-mail-parser": "^7.0",
-        "vlucas/phpdotenv": "^5.4"
+        "vlucas/phpdotenv": "^5.4",
+        "phpunit/phpunit": "^9.5.21",
+        "symfony/console": "^6.1"
     },
     "scripts": {
-        "pre-autoload-dump": "Google\\Task\\Composer::cleanup"
+        "pre-autoload-dump": "Google\\Task\\Composer::cleanup",
+        "test": [
+            "Composer\\Config::disableProcessTimeout",
+            "vendor/bin/phpunit test --test-suffix Should.php"
+        ]
     },
     "extra": {
         "google/apiclient-services": [
