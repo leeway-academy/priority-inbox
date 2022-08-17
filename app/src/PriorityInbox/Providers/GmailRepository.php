@@ -58,7 +58,7 @@ class GmailRepository implements EmailRepository
     }
 
     /**
-     * @param mixed $message
+     * @param Message $message
      * @return Email
      */
     private function buildEmailFrom(Message $message): Email
