@@ -1,4 +1,4 @@
-name: PHP Composer
+name: Build and Deploy the application
 
 on:
   push:
@@ -52,4 +52,4 @@ jobs:
         script: |
           cd ${{ secrets.APP_HOME }}
           git pull
-          php8.1 /usr/local/bin/composer install --prefer-dist --no-dev --optimize-autoloader --no-interaction
+          make build-prod
