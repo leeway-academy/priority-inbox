@@ -1,5 +1,7 @@
 {
     "name": "leewayweb/inbox-pause",
+    "description": "A script to better manage a Gmail Inbox",
+    "license": "MIT",
     "authors": [
         {
             "name": "Mauro Chojrin",
@@ -16,7 +18,7 @@
         "google/apiclient": "^2.0",
         "php-mime-mail-parser/php-mime-mail-parser": "^7.0",
         "vlucas/phpdotenv": "^5.4",
-        "phpunit/phpunit": "9.5.21",
+        "phpunit/phpunit": "^9.5.21",
         "symfony/console": "^6.1"
     },
     "scripts": {
