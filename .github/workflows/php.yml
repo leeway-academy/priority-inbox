@@ -37,3 +37,14 @@ jobs:
 
     - name: Run test suite
       run: composer run-script test
+  
+  deploy:
+
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - name: Log into the server
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        script: whoami    
