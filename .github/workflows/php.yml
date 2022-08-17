@@ -30,7 +30,7 @@ jobs:
           ${{ runner.os }}-php-
 
     - name: Install mailparse extension
-      run: apt install php8.1-mailparse
+      run: sudo apt install php8.1-mailparse
 
     - name: Install dependencies
       run: composer install --prefer-dist --no-progress
