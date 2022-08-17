@@ -29,7 +29,7 @@
         "pre-autoload-dump": "Google\\Task\\Composer::cleanup",
         "test": [
             "Composer\\Config::disableProcessTimeout",
-            "vendor/bin/phpunit app/test --test-suffix Should.php"
+            "vendor/bin/phpunit test --test-suffix Should.php"
         ]
     },
     "extra": {
