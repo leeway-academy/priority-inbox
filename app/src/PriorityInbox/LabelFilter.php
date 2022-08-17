@@ -2,8 +2,6 @@
 
 namespace PriorityInbox;
 
-use JetBrains\PhpStorm\ArrayShape;
-
 class LabelFilter extends EmailFilter
 {
     private Label $label;
@@ -16,7 +14,9 @@ class LabelFilter extends EmailFilter
         $this->label = $label;
     }
 
-    #[ArrayShape(['labelIds' => "string[]"])]
+    /**
+     * @return array<string, array<string>>
+     */
     public function getExpression(): array
     {
         return ['labelIds' => [$this->getLabelId()]];
