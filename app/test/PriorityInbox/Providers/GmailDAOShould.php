@@ -28,9 +28,9 @@ class TestableGmailDAO extends GmailDAO
 
 class GmailDAOShould extends TestCase
 {
-    const GOOGLE_USER = 'me';
-    const FORMAT_RAW = 'raw';
-    const FORMAT_KEY = 'format';
+    public const GOOGLE_USER = 'me';
+    public const FORMAT_RAW = 'raw';
+    public const FORMAT_KEY = 'format';
 
     /**
      * @test
@@ -63,13 +63,13 @@ class GmailDAOShould extends TestCase
             ->expects($this->exactly(count($messages)))
             ->method('get')
             ->with(self::GOOGLE_USER, $message->getId(), [ self::FORMAT_KEY => self::FORMAT_RAW, ])
-            ;
+        ;
 
         $userMessages
             ->method('get')
             ->with(self::GOOGLE_USER, $message->getId(), [ self::FORMAT_KEY => self::FORMAT_RAW, ])
             ->willReturn($raw)
-            ;
+        ;
 
         $gmailDAO = new TestableGmailDAO(new Gmail(), $userMessages);
         $retreivedMessages = $gmailDAO->getFilteredMessageList();

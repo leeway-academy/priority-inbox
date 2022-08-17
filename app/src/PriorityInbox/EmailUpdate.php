@@ -17,7 +17,7 @@ class EmailUpdate
     /**
      * @return array<string>
      */
-    public function addLabelIds() : array
+    public function addLabelIds(): array
     {
         return $this->addLabelIds;
     }
@@ -25,7 +25,7 @@ class EmailUpdate
     /**
      * @return array<string>
      */
-    public function removeLabelIds() : array
+    public function removeLabelIds(): array
     {
         return $this->removeLabelIds;
     }

@@ -59,7 +59,7 @@ class Email
     /**
      * @return Sender
      */
-    public function sender() : Sender
+    public function sender(): Sender
     {
         return $this->sender;
     }
@@ -87,7 +87,7 @@ class Email
      * @return int
      * @throws Exception
      */
-    public function hoursSinceItWasSent() : int
+    public function hoursSinceItWasSent(): int
     {
         return (new DateTimeImmutable('now', $this->sentAt()->getTimeZone()))->diff($this->sentAt(), true)->h;
     }

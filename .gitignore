@@ -10,3 +10,4 @@ hidden_label_prefix.php
 .env
 app/token.json
 /app/.phpunit.result.cache
+/app/.php-cs-fixer.cache
