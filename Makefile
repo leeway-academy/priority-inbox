@@ -1,5 +1,7 @@
-build:
-	docker build . -t gmail-priority-inbox
+image_name=gmail-priority-inbox
 
-build-dev: build
-	docker run -t gmail-priority-inbox apk add vim
+build-prod:
+	DOCKER_BUILDKIT=1 docker build --target=prod_img -t $(image_name) .
+
+build-dev:
+	DOCKER_BUILDKIT=1 docker build --target=dev_img -t $(image_name) .

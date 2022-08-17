@@ -1,4 +1,4 @@
-FROM jitesoft/php:8.1-cli
+FROM jitesoft/php:8.1-cli AS base_img
 
 RUN apk update && apk upgrade
 
@@ -18,6 +18,11 @@ RUN mv composer.phar /usr/local/bin/composer
 
 WORKDIR /app/
 
-RUN composer install
+FROM base_img AS dev_img
 
-ENTRYPOINT ["php", "run.php"]
+RUN composer install && \
+    apk add vim
+
+FROM base_img AS prod_img
+
+RUN composer install --prefer-dist --no-dev --optimize-autoloader --no-interaction
