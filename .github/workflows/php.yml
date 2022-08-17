@@ -37,3 +37,19 @@ jobs:
 
     - name: Run test suite
       run: composer run-script test
+  
+  deploy:
+
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - name: Deploy new version
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        key: ${{ secrets.SSH_KEY }}
+        username: ${{ secrets.SSH_USER }} 
+        script: |
+          cd ${{ secrets.APP_HOME }}
+          git pull
+          php8.1 /usr/local/bin/composer install --prefer-dist --no-dev --optimize-autoloader --no-interaction
