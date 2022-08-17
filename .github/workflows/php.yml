@@ -49,4 +49,4 @@ jobs:
         host: ${{ secrets.SSH_HOST }}
         key: ${{ secrets.SSH_KEY }}
         username: ${{ secrets.SSH_USER }} 
-        script: whoami    
+        script: ls ~/gmail-priority-inbox    
