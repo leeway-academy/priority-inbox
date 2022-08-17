@@ -15,5 +15,9 @@ test:
 cs-fix: 
 	docker run -v $(shell pwd)/app/:/app/:rw $(image_name) composer run-script cs-fix
 
+composer-update:
+	docker run -v $(shell pwd)/app/:/app/:rw $(image_name) composer update
 
+phpstan:
+	docker run -v $(shell pwd)/app/:/app/:rw $(image_name) composer run-script phpstan
 

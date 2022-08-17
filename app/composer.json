@@ -33,7 +33,8 @@
       "Composer\\Config::disableProcessTimeout",
       "vendor/bin/phpunit test --test-suffix Should.php"
     ],
-    "cs-fix": "vendor/bin/php-cs-fixer fix ."
+    "cs-fix": "vendor/bin/php-cs-fixer fix .",
+    "phpstan": "vendor/bin/phpstan analyse --level 5 src"
   },
   "extra": {
     "google/apiclient-services": [
