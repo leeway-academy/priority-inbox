@@ -43,10 +43,10 @@ jobs:
     runs-on: ubuntu-22.04
     
     steps:
-    - name: Log into the server
+    - name: Deploy new version
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.SSH_HOST }}
         key: ${{ secrets.SSH_KEY }}
         username: ${{ secrets.SSH_USER }} 
-        script: ls ~/gmail-priority-inbox    
+        script: cd ${{ secrets.APP_HOME }} ; git pull 
