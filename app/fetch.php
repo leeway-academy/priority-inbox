@@ -405,5 +405,5 @@ function getCLIOptions(): array|false
  */
 function logMessage(string $message): void
 {
-    echo date('Y-m-d H:i:s') . " $message" . PHP_EOL;
+    echo date('Y-m-d H:i:s') . " fetch.php" . PHP_EOL;
 }

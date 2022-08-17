@@ -1,12 +1,12 @@
 important_senders.php
 urgent_senders.php
-client_secret.json
+app/client_secret.json
 credentials.json
-vendor/
+app/vendor/
 hidden_label_prefix.php
 .idea/
 *.txt
 *.log
 .env
-token.json
-/.phpunit.result.cache
+app/token.json
+/app/.phpunit.result.cache

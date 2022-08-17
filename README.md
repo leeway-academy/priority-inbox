@@ -1,5 +1,6 @@
 # gmail-pirority-inbox
-Decide for yourself who gets your attention over email at any given time
+
+Decide for yourself who gets your attention over email at any given time.
 
 This script (together with a few usefull cronjobs) allows you to automatically triage email.
 
