@@ -23,14 +23,16 @@
         "symfony/console": "^6.1"
     },
     "require-dev": {
-        "phpunit/phpunit": "^9.5.21"
+        "phpunit/phpunit": "^9.5.21",
+        "friendsofphp/php-cs-fixer": "^3.9"
     },
     "scripts": {
         "pre-autoload-dump": "Google\\Task\\Composer::cleanup",
         "test": [
             "Composer\\Config::disableProcessTimeout",
             "vendor/bin/phpunit test --test-suffix Should.php"
-        ]
+        ],
+	"cs-fix": "vendor/bin/php-cs-fixer fix ."
     },
     "extra": {
         "google/apiclient-services": [
