@@ -9,8 +9,8 @@ use Psr\Log\LoggerInterface;
 
 class EmailPriorityMoverShould extends TestCase
 {
-    const INBOX_LABEL_ID = "INBOX";
-    const HIDDEN_EMAILS_LABEL_ID = "HIDDEN_EMAILS_ID";
+    public const INBOX_LABEL_ID = "INBOX";
+    public const HIDDEN_EMAILS_LABEL_ID = "HIDDEN_EMAILS_ID";
 
     private EmailRepository $emailRepository;
     private EmailPriorityMover $emailPriorityMover;
@@ -32,7 +32,7 @@ class EmailPriorityMoverShould extends TestCase
         $emailFromAllowedSender
             ->method('sender')
             ->willReturn($sender)
-            ;
+        ;
 
         $emailFromAllowedSender
             ->expects($this->once())
@@ -70,13 +70,13 @@ class EmailPriorityMoverShould extends TestCase
         $emailFromBlackListedSender
             ->method('sender')
             ->willReturn($sender)
-            ;
+        ;
 
         $emailFromBlackListedSender
             ->expects($this->never())
             ->method('addLabel')
             ->with($this->equalTo($inboxLabel))
-            ;
+        ;
 
         $emailFromBlackListedSender
             ->expects($this->never())
@@ -107,7 +107,7 @@ class EmailPriorityMoverShould extends TestCase
             ->expects($this->once())
             ->method('addLabel')
             ->with($this->equalTo($this->inboxLabel))
-            ;
+        ;
         $firstEmail
             ->expects($this->once())
             ->method('removeLabel')
@@ -289,5 +289,4 @@ class EmailPriorityMoverShould extends TestCase
         $this->inboxLabel = new Label(self::INBOX_LABEL_ID);
         $this->hiddenLabel = new Label(self::HIDDEN_EMAILS_LABEL_ID);
     }
-
 }

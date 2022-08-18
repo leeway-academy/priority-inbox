@@ -15,13 +15,13 @@ use PriorityInbox\Sender;
 
 class GmailRepositoryShould extends TestCase
 {
-    const A_LABEL = "A label";
-    const LABEL_ID = "abcd";
-    const EMAIL_ID = "1";
-    const SENDER_ADDRESS = "asasas";
-    const LABEL_ADD_THIS = "ADD THIS";
-    const LABEL_REMOVE_THIS = "REMOVE THIS";
-    const DATE_FORMAT = 'd-m-Y H:i:s';
+    public const A_LABEL = "A label";
+    public const LABEL_ID = "abcd";
+    public const EMAIL_ID = "1";
+    public const SENDER_ADDRESS = "asasas";
+    public const LABEL_ADD_THIS = "ADD THIS";
+    public const LABEL_REMOVE_THIS = "REMOVE THIS";
+    public const DATE_FORMAT = 'd-m-Y H:i:s';
     private GmailRepository $gmailRepository;
     private GmailDAO $gmailDAO;
 

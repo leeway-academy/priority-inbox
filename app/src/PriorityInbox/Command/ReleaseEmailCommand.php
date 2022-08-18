@@ -227,7 +227,11 @@ class ReleaseEmailCommand extends Command
      */
     private function addAllowedSenderPattern(string $pattern): void
     {
-        $this->getEmailPriorityMover()
+        $this
+            ->getLogger()
+            ->info('Allowing senders matching "'.$pattern.'"');
+        $this
+            ->getEmailPriorityMover()
             ->addAllowedSenderPattern(new SenderPattern($pattern));
     }
 
@@ -237,8 +241,8 @@ class ReleaseEmailCommand extends Command
      */
     private function addAllowedSenderPatternsFromFile(string $whiteListFileName): void
     {
-        foreach (file($whiteListFileName) as $sender) {
-            $this->addAllowedSenderPattern($sender);
+        foreach (file($whiteListFileName) as $pattern) {
+            $this->addAllowedSenderPattern(trim($pattern));
         }
     }
 

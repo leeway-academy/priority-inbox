@@ -147,9 +147,11 @@ function moveToInbox(GmailMessage $message, Google_Service_Gmail $service, strin
     $mods->setRemoveLabelIds([$hiddenLabelId]);
     $service
         ->users_messages
-        ->modify('me',
+        ->modify(
+            'me',
             $message->getId(),
-            $mods);
+            $mods
+        );
     logMessage(' Message with ID: ' . $message->getId() . ' successfully modified.');
 }
 
@@ -161,8 +163,8 @@ function moveToInbox(GmailMessage $message, Google_Service_Gmail $service, strin
 function senderBelongs(array $importantSenders, string $from): bool
 {
     return count(
-            array_filter($importantSenders, fn(string $sender) => $sender && (str_contains(strtolower($from), $sender)))
-        ) > 0;
+        array_filter($importantSenders, fn (string $sender) => $sender && (str_contains(strtolower($from), $sender)))
+    ) > 0;
 }
 
 /**

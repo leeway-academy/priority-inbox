@@ -7,7 +7,7 @@ use Psr\Log\LoggerInterface;
 
 class EmailPriorityMover
 {
-    const INBOX = "INBOX";
+    public const INBOX = "INBOX";
     private Label $hiddenLabel;
     private EmailRepository $emailRepository;
     /**
@@ -240,7 +240,6 @@ class EmailPriorityMover
     {
         foreach ($this->allowedSenderPatterns as $allowedSenderPattern) {
             if ($allowedSenderPattern->matches($sender)) {
-
                 return true;
             }
         }
@@ -256,7 +255,6 @@ class EmailPriorityMover
     {
         foreach ($this->notAllowedSenders as $notAllowedSender) {
             if ($notAllowedSender->matches($sender)) {
-
                 return true;
             }
         }

@@ -6,7 +6,6 @@ use PHPUnit\Framework\TestCase;
 
 class SenderPatternShould extends TestCase
 {
-
     /**
      * @test
      */

@@ -1,6 +1,7 @@
 <?php
 
 namespace PriorityInbox\Providers;
+
 use Google\Service\Gmail;
 use Google\Service\Gmail\Message;
 use Google\Service\Gmail\ModifyMessageRequest;
@@ -10,9 +11,9 @@ use PriorityInbox\EmailUpdate;
 
 class GmailDAO
 {
-    const GMAIL_USER = "me";
-    const FORMAT_KEY = 'format';
-    const FORMAT_RAW = 'raw';
+    public const GMAIL_USER = "me";
+    public const FORMAT_KEY = 'format';
+    public const FORMAT_RAW = 'raw';
     private Gmail $gmail;
 
     /**
@@ -27,11 +28,11 @@ class GmailDAO
      * @param array<EmailFilter> $filters
      * @return Message[]
      */
-    public function getFilteredMessageList(array $filters = []) : array
+    public function getFilteredMessageList(array $filters = []): array
     {
         $retrievedMessages = $this
             ->getUserMessages()
-            ->listUsersMessages(self::GMAIL_USER, current(array_map(fn(EmailFilter $filter) => $filter->getExpression(), $filters)))
+            ->listUsersMessages(self::GMAIL_USER, current(array_map(fn (EmailFilter $filter) => $filter->getExpression(), $filters)))
             ->getMessages();
 
         $return = [];
@@ -39,7 +40,7 @@ class GmailDAO
         foreach ($retrievedMessages as $retrievedMessage) {
             $return[] = $this
                 ->getUserMessages()
-                ->get( self::GMAIL_USER, $retrievedMessage->getId(), [ self::FORMAT_KEY => self::FORMAT_RAW] );
+                ->get(self::GMAIL_USER, $retrievedMessage->getId(), [ self::FORMAT_KEY => self::FORMAT_RAW]);
         }
 
         return $return;
@@ -50,7 +51,7 @@ class GmailDAO
      * @param EmailUpdate $update
      * @return void
      */
-    public function modifyMessage(string $messageId, EmailUpdate $update) : void
+    public function modifyMessage(string $messageId, EmailUpdate $update): void
     {
         $this->executeModification($messageId, $this->buildModifyRequest($update));
     }
@@ -71,9 +72,11 @@ class GmailDAO
     private function executeModification(string $messageId, ModifyMessageRequest $request): void
     {
         $this->getUserMessages()
-            ->modify(self::GMAIL_USER,
+            ->modify(
+                self::GMAIL_USER,
                 $messageId,
-                $request);
+                $request
+            );
     }
 
     /**

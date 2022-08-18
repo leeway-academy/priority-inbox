@@ -7,7 +7,7 @@ use PHPUnit\Framework\TestCase;
 
 class EmailShould extends TestCase
 {
-    const LABEL_ID = "added";
+    public const LABEL_ID = "added";
 
     /**
      * @test
