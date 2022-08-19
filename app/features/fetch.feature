@@ -4,7 +4,8 @@ Feature: fetch
   I need my email to be moved to my inbox at the established times
 
   Scenario: Move to the inbox the emails coming from whitelisted senders
-    Given There is an email with id "email1" from "sender1@domain.com" labeled "hidden"
+    Given The hidden labelId is "hidden"
+    And There is an email with id "email1" from "sender1@domain.com" labeled "hidden"
     And There is an email with id "email2" from "sender2@domain.com" labeled "hidden"
     And There is an email with id "email3" from "sender3@domain.com" labeled "hidden"
     And There is an email with id "email4" from "sender1@domain.com" labeled "hidden"

@@ -133,4 +133,13 @@ class Email
     {
         unset($this->addedLabels[$toRemove->id()]);
     }
+
+    /**
+     * @param string $labelId
+     * @return bool
+     */
+    public function isLabeled(string $labelId): bool
+    {
+        return array_key_exists($labelId, $this->labels());
+    }
 }

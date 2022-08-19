@@ -29,4 +29,9 @@ class LabelFilter extends EmailFilter
     {
         return $this->label->id();
     }
+
+    public function isValid(Email $email): bool
+    {
+        return $email->isLabeled($this->getLabelId());
+    }
 }

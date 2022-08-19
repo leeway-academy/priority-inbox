@@ -1,13 +1,11 @@
 <?php
 
 use Behat\Behat\Context\Context;
-use PriorityInbox\{Command\ReleaseEmailCommand, Email, EmailId, EmailRepository, Label, Sender};
+use PriorityInbox\{Command\ReleaseEmailCommand, Email, EmailId, Label, Sender};
 use Symfony\Component\Console\Exception\ExceptionInterface;
 use Symfony\Component\Console\Input\StringInput;
 use Symfony\Component\Console\Output\BufferedOutput;
-use function PHPUnit\Framework\assertContains;
 use function PHPUnit\Framework\assertContainsEquals;
-use function PHPUnit\Framework\assertNotContains;
 use function PHPUnit\Framework\assertNotContainsEquals;
 
 /**
@@ -20,6 +18,7 @@ class FeatureContext implements Context
      * @var array <Email>
      */
     private array $options;
+    private $hiddenLabelId;
 
     /**
      * Initializes context.
@@ -31,6 +30,14 @@ class FeatureContext implements Context
     public function __construct()
     {
         $this->emailRepository = $this->buildEmailRepository();
+    }
+
+    /**
+     * @Given The hidden labelId is :hiddenLabelId
+     */
+    public function theHiddenLabelidIs(string $hiddenLabelId)
+    {
+        $this->hiddenLabelId = $hiddenLabelId;
     }
 
     /**
@@ -52,7 +59,7 @@ class FeatureContext implements Context
         $theCommand = new ReleaseEmailCommand($this->emailRepository);
         $theCommand->addOption('verbose', 'v');
         $output = new BufferedOutput();
-        $invocationArguments = "hidden ".$invocationArguments;
+        $invocationArguments = $this->hiddenLabelId." ".$invocationArguments;
         $theCommand->run(new StringInput($invocationArguments), $output);
     }
 
@@ -79,7 +86,7 @@ class FeatureContext implements Context
     }
 
     /**
-     * @return EmailRepository
+     * @return EmailRepositoryStub
      */
     private function buildEmailRepository() : EmailRepositoryStub
     {

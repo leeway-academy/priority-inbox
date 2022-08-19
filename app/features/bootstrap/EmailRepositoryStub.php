@@ -14,7 +14,7 @@ class EmailRepositoryStub implements EmailRepository
      * @param Email $email
      * @return $this
      */
-    public function addEmail(Email $email) : self
+    public function addEmail(Email $email): self
     {
         $this->emails[$email->id()->value()] = $email;
 
@@ -27,12 +27,26 @@ class EmailRepositoryStub implements EmailRepository
 
         return $this;
     }
+
     /**
      * @inheritDoc
      */
     public function fetch(array $filters): array
     {
-        return $this->emails;
+        $filteredEmails = [];
+
+        foreach ($this->emails as $email) {
+            foreach ($filters as $filter) {
+                if (!$filter->isValid($email)) {
+
+                    break;
+                }
+            }
+
+            $filteredEmails[] = $email;
+        }
+
+        return $filteredEmails;
     }
 
     /**
