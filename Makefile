@@ -3,8 +3,13 @@ image_name=gmail-priority-inbox
 build:
 	docker build -t $(image_name) .
 
-build-dev: build
+install-vim:
+	docker run $(image_name) apk add vim
+
+composer-install:
 	docker run -v $(shell pwd)/app/:/app/:rw $(image_name) composer install
+
+build-dev: build composer-install install-vim
 
 build-prod: build
 	docker run -v $(shell pwd)/app/:/app/:rw $(image_name) composer install --no-dev --no-interaction --optimize-autoloader --prefer-dist
@@ -20,4 +25,7 @@ composer-update:
 
 phpstan:
 	docker run -v $(shell pwd)/app/:/app/:rw $(image_name) composer run-script phpstan
+
+behat:
+	docker run -v $(shell pwd)/app/:/app/:rw $(image_name) composer run-script behat
 

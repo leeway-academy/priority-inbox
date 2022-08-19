@@ -3,15 +3,9 @@
 namespace PriorityInbox\Command;
 
 use Exception;
-use Google\Client;
-use Google\Client as GoogleClient;
-use Google\Exception as GoogleException;
-use Google\Service\Gmail;
-use PhpMimeMailParser\Parser;
 use PriorityInbox\EmailPriorityMover;
+use PriorityInbox\EmailRepository;
 use PriorityInbox\Label;
-use PriorityInbox\Providers\GmailDAO;
-use PriorityInbox\Providers\GmailRepository;
 use PriorityInbox\SenderPattern;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -28,6 +22,21 @@ class ReleaseEmailCommand extends Command
 {
     private EmailPriorityMover $emailPriorityMover;
     private NullLogger|ConsoleLogger $logger;
+    private EmailRepository $emailRepository;
+
+    public function __construct(EmailRepository $emailRepository, string $name = null)
+    {
+        $this->emailRepository = $emailRepository;
+        parent::__construct($name);
+    }
+
+    /**
+     * @return EmailRepository
+     */
+    protected function getEmailRepository(): EmailRepository
+    {
+        return $this->emailRepository;
+    }
 
     protected function configure(): void
     {
@@ -38,16 +47,16 @@ class ReleaseEmailCommand extends Command
             ->addOption("minimum-delay", "m", InputOption::VALUE_REQUIRED, "How many hours must have since emails were sent", 0)
             ->addOption("dry-run", "d", InputOption::VALUE_NONE, "Simulate move")
             ->addArgument("hidden-label-id", InputArgument::REQUIRED, "Id of the label used to hide emails")
-            ->addArgument("application-name", InputArgument::REQUIRED, "Gmail application name")
-            ->addArgument("client-secret-path", InputArgument::REQUIRED, "Path to json file where Gmail client secrets are stored")
-            ->addArgument("client-credentials-path", InputArgument::REQUIRED, "Path to where the access token is to be stored");
+//            ->addArgument("application-name", InputArgument::REQUIRED, "Gmail application name")
+//            ->addArgument("client-secret-path", InputArgument::REQUIRED, "Path to json file where Gmail client secrets are stored")
+//            ->addArgument("client-credentials-path", InputArgument::REQUIRED, "Path to where the access token is to be stored")
+        ;
     }
 
     /**
      * @param InputInterface $input
      * @param OutputInterface $output
      * @return int
-     * @throws GoogleException
      * @throws Exception
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -68,10 +77,10 @@ class ReleaseEmailCommand extends Command
     {
         $this->emailPriorityMover = $emailPriorityMover;
     }
+
     /**
      * @param InputInterface $input
      * @return void
-     * @throws GoogleException
      */
     private function setupEmailMover(InputInterface $input): void
     {
@@ -90,79 +99,10 @@ class ReleaseEmailCommand extends Command
     {
         $this
             ->getLogger()
-            ->info("Starting email moving")
-        ;
+            ->info("Starting email moving");
         $this
             ->getEmailPriorityMover()
             ->fillInbox();
-    }
-
-    /**
-     * @param string $applicationName
-     * @param string $clientSecretPath
-     * @param string $credentialsPath
-     * @return GoogleClient
-     * @throws GoogleException
-     */
-    private function buildGmailClient(string $applicationName, string $clientSecretPath, string $credentialsPath): Client
-    {
-        $client = new GoogleClient();
-        $client->setApplicationName($applicationName);
-        $client->setScopes([Gmail::MAIL_GOOGLE_COM]);
-        $client->setAuthConfig($clientSecretPath);
-        $client->setAccessType('offline');
-
-        $this->loadExistingCredentialsIfPossible($credentialsPath);
-
-        $client->setAccessToken($this->getAccessTokenDataFrom($credentialsPath));
-
-        $this->refreshTokenIfExpired($client, $credentialsPath);
-
-        return $client;
-    }
-
-    /**
-     * @param string $credentialsPath
-     * @return void
-     * @throws GoogleException
-     */
-    private function loadExistingCredentialsIfPossible(string $credentialsPath): void
-    {
-        if (!file_exists($credentialsPath)) {
-            throw new GoogleException("Credentials not found. Run the authorize command first");
-        }
-    }
-
-    /**
-     * @param string $credentialsPath
-     * @return mixed
-     */
-    private function getAccessTokenDataFrom(string $credentialsPath): mixed
-    {
-        return json_decode(file_get_contents($credentialsPath), true);
-    }
-
-    /**
-     * @param string $credentialsPath
-     * @param array $accessToken
-     * @return void
-     */
-    private function storeAccessTokenData(string $credentialsPath, array $accessToken): void
-    {
-        file_put_contents($credentialsPath, json_encode($accessToken));
-    }
-
-    /**
-     * @param GoogleClient $client
-     * @param string $credentialsPath
-     * @return void
-     */
-    private function refreshTokenIfExpired(GoogleClient $client, string $credentialsPath): void
-    {
-        if ($client->isAccessTokenExpired()) {
-            $client->fetchAccessTokenWithRefreshToken($client->getRefreshToken());
-            $this->storeAccessTokenData($credentialsPath, $client->getAccessToken());
-        }
     }
 
     /**
@@ -229,7 +169,7 @@ class ReleaseEmailCommand extends Command
     {
         $this
             ->getLogger()
-            ->info('Allowing senders matching "'.$pattern.'"');
+            ->info('Allowing senders matching "' . $pattern . '"');
         $this
             ->getEmailPriorityMover()
             ->addAllowedSenderPattern(new SenderPattern($pattern));
@@ -356,24 +296,11 @@ class ReleaseEmailCommand extends Command
     /**
      * @param InputInterface $input
      * @return EmailPriorityMover
-     * @throws GoogleException
      */
     private function buildEmailPriorityMover(InputInterface $input): EmailPriorityMover
     {
-        $applicationName = $input->getArgument('application-name');
-        $clientSecretPath = $input->getArgument('client-secret-path');
-        $credentialsPath = $input->getArgument('client-credentials-path');
-
-        $this->getLogger()->info("Application name: ".$applicationName);
-        $this->getLogger()->info("Client secret path: ".$clientSecretPath);
-        $this->getLogger()->info("Client credentials path: ".$credentialsPath);
-
         return new EmailPriorityMover(
-            new GmailRepository(new GmailDAO(new Gmail($this->buildGmailClient(
-                $applicationName,
-                $clientSecretPath,
-                $credentialsPath
-            ))), new Parser()),
+            $this->getEmailRepository(),
             new Label($input->getArgument('hidden-label-id')),
             $this->getLogger()
         );

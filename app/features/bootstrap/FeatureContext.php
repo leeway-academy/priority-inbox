@@ -1,19 +1,25 @@
 <?php
 
-namespace bootstrap;
-
 use Behat\Behat\Context\Context;
-use Behat\Behat\Tester\Exception\PendingException;
-use Behat\Gherkin\Node\PyStringNode;
-use Behat\Gherkin\Node\TableNode;
+use PriorityInbox\{Command\ReleaseEmailCommand, Email, EmailId, EmailRepository, Label, Sender};
+use Symfony\Component\Console\Exception\ExceptionInterface;
+use Symfony\Component\Console\Input\StringInput;
+use Symfony\Component\Console\Output\BufferedOutput;
+use function PHPUnit\Framework\assertContains;
+use function PHPUnit\Framework\assertContainsEquals;
+use function PHPUnit\Framework\assertNotContains;
+use function PHPUnit\Framework\assertNotContainsEquals;
 
 /**
  * Defines application features from the specific context.
  */
 class FeatureContext implements Context
 {
-    private string $whiteListFileName;
-    private array $waitingEmailsFrom = [];
+    private EmailRepositoryStub $emailRepository;
+    /**
+     * @var array <Email>
+     */
+    private array $options;
 
     /**
      * Initializes context.
@@ -24,43 +30,59 @@ class FeatureContext implements Context
      */
     public function __construct()
     {
-        $this->whiteListFileName = tempnam(__DIR__, '');
-    }
-
-    public function __destruct()
-    {
-        unlink($this->whiteListFileName);
+        $this->emailRepository = $this->buildEmailRepository();
     }
 
     /**
-     * @Given The whitelist contains :sender
+     * @Given There is an email with id :emailId from :sender labeled :labelId
      */
-    public function theWhitelistContains(string $sender)
+    public function thereIsAnEmailWithIdFromLabeled(string $emailId, string $sender, string $labelId)
     {
-        file_put_contents($this->whiteListFileName, trim(FeatureContext . phpfile_get_contents($this->whiteListFileName) . $sender));
+        $email = new Email(new EmailId($emailId), new Sender($sender), new DateTimeImmutable());
+        $email->addLabel(new Label($labelId));
+        $this->emailRepository->addEmail($email);
     }
 
     /**
-     * @Given There is an email from :sender waiting
+     * @When I run the command run.php :invocationArguments
+     * @throws ExceptionInterface
      */
-    public function thereIsAnEmailFromWaiting(string $sender)
+    public function iRunTheCommandRunPhp(string $invocationArguments)
     {
-        $this->waitingEmailsFrom[] = $sender;
+        $theCommand = new ReleaseEmailCommand($this->emailRepository);
+        $theCommand->addOption('verbose', 'v');
+        $output = new BufferedOutput();
+        $invocationArguments = "hidden ".$invocationArguments;
+        $theCommand->run(new StringInput($invocationArguments), $output);
     }
 
     /**
-     * @When I ask for my emails
+     * @Then the email with id :emailId should be labeled :labelId
      */
-    public function iAskForMyEmails()
+    public function theEmailWithIdShouldBeLabeled(string $emailId, string $labelId)
     {
-        echo "php fetch.php -w " . $this->whiteListFileName;
+        assertContainsEquals(new Label($labelId), $this
+            ->emailRepository
+            ->getEmail($emailId)
+            ->labels());
     }
 
     /**
-     * @Then I should get
+     * @Then the email with id :emailId should not be labeled :labelId
      */
-    public function iShouldGet(PyStringNode $string)
+    public function theEmailWithIdShouldNotBeLabeled(string $emailId, string $labelId)
     {
-        throw new PendingException();
+        assertNotContainsEquals(new Label($labelId), $this
+            ->emailRepository
+            ->getEmail($emailId)
+            ->labels());
+    }
+
+    /**
+     * @return EmailRepository
+     */
+    private function buildEmailRepository() : EmailRepositoryStub
+    {
+        return new EmailRepositoryStub();
     }
 }
