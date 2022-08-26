@@ -64,7 +64,7 @@ class EmailPriorityMover
         foreach ($hiddenEmails as $hiddenEmail) {
             $this
                 ->getLogger()
-                ->debug("Found message coming from ".$hiddenEmail->sender()." sent at ".$hiddenEmail->sentAt()->format("d-M-Y"));
+                ->debug("Found message coming from ".$hiddenEmail->sender()." sent at ".$hiddenEmail->sentAt()->format("d-M-Y H:i:s"));
             $this->moveToInboxIfMovable($hiddenEmail);
         }
     }
