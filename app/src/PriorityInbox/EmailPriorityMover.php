@@ -64,7 +64,7 @@ class EmailPriorityMover
         foreach ($hiddenEmails as $hiddenEmail) {
             $this
                 ->getLogger()
-                ->debug("Found message coming from ".$hiddenEmail->sender()." sent at ".$hiddenEmail->sentAt()->format("d-M-Y H:i:s"));
+                ->debug("Found message coming from ".$hiddenEmail->sender()." sent ".$hiddenEmail->hoursSinceItWasSent()." hours ago");
             $this->moveToInboxIfMovable($hiddenEmail);
         }
     }
@@ -83,12 +83,13 @@ class EmailPriorityMover
     /**
      * @param Email $email
      * @return void
+     * @throws Exception
      */
     private function moveToInbox(Email $email): void
     {
         $this
             ->getLogger()
-            ->info("Moving email from ".$email->sender()." sent at ".$email->sentAt()->format("d-M-Y")." to Inbox")
+            ->info("Moving email from ".$email->sender()." sent ".$email->hoursSinceItWasSent()." hours ago to Inbox")
         ;
         $this
             ->getLogger()
@@ -142,10 +143,6 @@ class EmailPriorityMover
     private function moveToInboxIfMovable(Email $hiddenEmail): void
     {
         if ($this->shouldBeMoved($hiddenEmail)) {
-            $this
-                ->getLogger()
-                ->info('Found one email from '.$hiddenEmail->sender().' sent at '.$hiddenEmail->sentAt()->format('d-M-Y H:i:s').': will be moved to inbox')
-            ;
             $this->moveToInbox($hiddenEmail);
         }
     }
