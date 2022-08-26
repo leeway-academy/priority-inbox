@@ -92,4 +92,12 @@ class FeatureContext implements Context
     {
         return new EmailRepositoryStub();
     }
+
+    /**
+     * @Given /^The file "([^"]*)" contains "([^"]*)"$/
+     */
+    public function theFileContains(string $filename, string $text)
+    {
+        file_put_contents($filename, (file_exists($filename) ? file_get_contents($filename).PHP_EOL : '').$text );
+    }
 }
