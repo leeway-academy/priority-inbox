@@ -67,3 +67,17 @@ Feature: fetch
     And the email with id "email2" should be labeled "hidden"
     And the email with id "email3" should not be labeled "INBOX"
     And the email with id "email3" should be labeled "hidden"
+
+  Scenario: Build blacklist from a file
+    Given The file "blacklist.txt" contains "sender1@domain.com"
+    And The file "blacklist.txt" contains "sender2@domain.com"
+    And There is an email with id "email1" from "sender1@domain.com" labeled "hidden"
+    And There is an email with id "email2" from "sender2@domain.com" labeled "hidden"
+    And There is an email with id "email3" from "sender3@domain.com" labeled "hidden"
+    When I run the command run.php "-b blacklist.txt"
+    Then the email with id "email1" should not be labeled "INBOX"
+    And the email with id "email1" should be labeled "hidden"
+    And the email with id "email2" should not be labeled "INBOX"
+    And the email with id "email2" should be labeled "hidden"
+    And the email with id "email3" should be labeled "INBOX"
+    And the email with id "email3" should not be labeled "hidden"
