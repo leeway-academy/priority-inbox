@@ -106,13 +106,14 @@ class ReleaseEmailCommand extends Command
     }
 
     /**
-     * @param array<string> $blackList
+     * @param array<string> $blackListEntries
      * @return void
      */
-    private function addNotAllowedSenderPatternsFromArray(array $blackList): void
+    private function addNotAllowedSenderPatternsFromArray(array $blackListEntries): void
     {
-        foreach ($blackList as $blackListFile) {
-            $this->addNotAllowedSenderPatternsFrom($blackListFile);
+        $this->getLogger()->debug("Processing blacklist as array");
+        foreach ($blackListEntries as $blackListEntry) {
+            $this->addNotAllowedSenderPatternsFromString($blackListEntry);
         }
     }
 
@@ -122,6 +123,7 @@ class ReleaseEmailCommand extends Command
      */
     private function addNotAllowedSenderPattern(string $pattern): void
     {
+        $this->getLogger()->debug("Disallowing emails from $pattern");
         $this->getEmailPriorityMover()
             ->addNotAllowedSenderPattern(new SenderPattern($pattern));
     }
@@ -138,26 +140,28 @@ class ReleaseEmailCommand extends Command
     }
 
     /**
-     * @param string $blackListFile
+     * @param string $blacklistEntry
      * @return void
      */
-    private function addNotAllowedSenderPatternsFrom(string $blackListFile): void
+    private function addNotAllowedSenderPatternsFromString(string $blacklistEntry): void
     {
-        if (is_readable($blackListFile)) {
-            $this->addNotAllowedSenderPatternsFromFile($blackListFile);
+        $this->getLogger()->debug("Processing blacklist entry $blacklistEntry");
+        if (is_readable($blacklistEntry)) {
+            $this->getLogger()->debug("Reading blacklist from file '$blacklistEntry'");
+            $this->addNotAllowedSenderPatternsFromFile($blacklistEntry);
         } else {
-            $this->addNotAllowedSenderPattern($blackListFile);
+            $this->addNotAllowedSenderPattern($blacklistEntry);
         }
     }
 
     /**
-     * @param array<string> $whiteList
+     * @param array<string> $whiteListEntries
      * @return void
      */
-    private function addAllowedSenderPatternsFromArray(array $whiteList): void
+    private function addAllowedSenderPatternsFromArray(array $whiteListEntries): void
     {
-        foreach ($whiteList as $whiteListFile) {
-            $this->addAllowedSenderPatternsFrom($whiteListFile);
+        foreach ($whiteListEntries as $whiteListEntry) {
+            $this->addAllowedSenderPatternsFromString($whiteListEntry);
         }
     }
 
@@ -190,7 +194,7 @@ class ReleaseEmailCommand extends Command
      * @param string $whiteListFileName
      * @return void
      */
-    private function addAllowedSenderPatternsFrom(string $whiteListFileName): void
+    private function addAllowedSenderPatternsFromString(string $whiteListFileName): void
     {
         if (is_readable($whiteListFileName)) {
             $this->addAllowedSenderPatternsFromFile($whiteListFileName);
@@ -254,7 +258,7 @@ class ReleaseEmailCommand extends Command
             if (is_array($blackList)) {
                 $this->addNotAllowedSenderPatternsFromArray($blackList);
             } else {
-                $this->addNotAllowedSenderPattern($blackList);
+                $this->addNotAllowedSenderPatternsFromString($blackList);
             }
         }
     }
@@ -272,7 +276,7 @@ class ReleaseEmailCommand extends Command
             if (is_array($whiteList)) {
                 $this->addAllowedSenderPatternsFromArray($whiteList);
             } else {
-                $this->addAllowedSenderPattern($whiteList);
+                $this->addAllowedSenderPatternsFromString($whiteList);
             }
         }
     }
