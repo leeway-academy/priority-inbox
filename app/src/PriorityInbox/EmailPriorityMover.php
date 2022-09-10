@@ -17,7 +17,7 @@ class EmailPriorityMover
     /**
      * @var array <SenderPattern>
      */
-    private array $notAllowedSenders = [];
+    private array $notAllowedSenderPatterns = [];
     private int $minimumDelay = 0;
     private bool $dryRun = false;
     private LoggerInterface $logger;
@@ -174,7 +174,7 @@ class EmailPriorityMover
      */
     private function wasSentByNotAllowedSender(Email $hiddenEmail): bool
     {
-        return !empty($this->notAllowedSenders) && $this->senderBelongsToBlackList($hiddenEmail->sender());
+        return !empty($this->notAllowedSenderPatterns) && $this->senderBelongsToBlackList($hiddenEmail->sender());
     }
 
     /**
@@ -193,7 +193,7 @@ class EmailPriorityMover
      */
     public function addNotAllowedSenderPattern(SenderPattern $pattern): self
     {
-        $this->notAllowedSenders[] = $pattern;
+        $this->notAllowedSenderPatterns[] = $pattern;
 
         return $this;
     }
@@ -235,13 +235,7 @@ class EmailPriorityMover
      */
     private function senderBelongsToWhiteList(Sender $sender): bool
     {
-        foreach ($this->allowedSenderPatterns as $allowedSenderPattern) {
-            if ($allowedSenderPattern->matches($sender)) {
-                return true;
-            }
-        }
-
-        return false;
+        return $this->senderBelongsToList($sender, $this->allowedSenderPatterns);
     }
 
     /**
@@ -250,13 +244,7 @@ class EmailPriorityMover
      */
     private function senderBelongsToBlackList(Sender $sender): bool
     {
-        foreach ($this->notAllowedSenders as $notAllowedSender) {
-            if ($notAllowedSender->matches($sender)) {
-                return true;
-            }
-        }
-
-        return false;
+        return $this->senderBelongsToList($sender, $this->notAllowedSenderPatterns);
     }
 
     /**
@@ -266,5 +254,17 @@ class EmailPriorityMover
     {
         return $this
             ->emailRepository;
+    }
+
+    /**
+     * @param Sender $sender
+     * @param array $list
+     * @return bool
+     */
+    private function senderBelongsToList(Sender $sender, array $list): bool
+    {
+        $match = array_filter($list, fn(SenderPattern $pattern) => $pattern->matches($sender));
+
+        return !empty($match);
     }
 }
