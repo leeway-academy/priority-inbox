@@ -29,3 +29,5 @@ phpstan:
 behat:
 	docker run -v $(shell pwd)/app/:/app/:rw $(image_name) composer run-script behat
 
+sh:
+	docker run -it -v $(shell pwd)/app/:/app/:rw $(image_name) sh
