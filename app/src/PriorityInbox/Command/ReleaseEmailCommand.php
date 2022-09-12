@@ -191,15 +191,16 @@ class ReleaseEmailCommand extends Command
     }
 
     /**
-     * @param string $whiteListFileName
+     * @param string $whiteListDefinitionString
      * @return void
      */
-    private function addAllowedSenderPatternsFromString(string $whiteListFileName): void
+    private function addAllowedSenderPatternsFromString(string $whiteListDefinitionString): void
     {
-        if (is_readable($whiteListFileName)) {
-            $this->addAllowedSenderPatternsFromFile($whiteListFileName);
+        if (is_readable($whiteListDefinitionString)) {
+            $this->getLogger()->debug("Reading whitelist from '".realpath($whiteListDefinitionString)."'");
+            $this->addAllowedSenderPatternsFromFile($whiteListDefinitionString);
         } else {
-            $this->addAllowedSenderPattern($whiteListFileName);
+            $this->addAllowedSenderPattern($whiteListDefinitionString);
         }
     }
 
