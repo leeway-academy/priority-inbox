@@ -123,7 +123,9 @@ class ReleaseEmailCommand extends Command
      */
     private function addNotAllowedSenderPattern(string $pattern): void
     {
-        $this->getLogger()->debug("Disallowing emails from $pattern");
+        $this
+            ->getLogger()
+            ->info('Disallowing senders matching "' . $pattern . '"');
         $this->getEmailPriorityMover()
             ->addNotAllowedSenderPattern(new SenderPattern($pattern));
     }
@@ -134,23 +136,10 @@ class ReleaseEmailCommand extends Command
      */
     private function addNotAllowedSenderPatternsFromFile(string $blackListFileName): void
     {
-        foreach (file($blackListFileName) as $notAllowedSender) {
-            $this->addNotAllowedSenderPattern($notAllowedSender);
-        }
-    }
+        $this->getLogger()->debug("Reading blacklist from file '".realpath($blackListFileName)."'");
 
-    /**
-     * @param string $blacklistEntry
-     * @return void
-     */
-    private function addNotAllowedSenderPatternsFromString(string $blacklistEntry): void
-    {
-        $this->getLogger()->debug("Processing blacklist entry $blacklistEntry");
-        if (is_readable($blacklistEntry)) {
-            $this->getLogger()->debug("Reading blacklist from file '".realpath($blacklistEntry)."'");
-            $this->addNotAllowedSenderPatternsFromFile($blacklistEntry);
-        } else {
-            $this->addNotAllowedSenderPattern($blacklistEntry);
+        foreach (file($blackListFileName) as $pattern) {
+            $this->addNotAllowedSenderPattern(trim($pattern));
         }
     }
 
@@ -162,6 +151,20 @@ class ReleaseEmailCommand extends Command
     {
         foreach ($whiteListEntries as $whiteListEntry) {
             $this->addAllowedSenderPatternsFromString($whiteListEntry);
+        }
+    }
+
+    /**
+     * @param string $blacklistDefinitionString
+     * @return void
+     */
+    private function addNotAllowedSenderPatternsFromString(string $blacklistDefinitionString): void
+    {
+        $this->getLogger()->debug("Processing blacklist entry $blacklistDefinitionString");
+        if (is_readable($blacklistDefinitionString)) {
+            $this->addNotAllowedSenderPatternsFromFile($blacklistDefinitionString);
+        } else {
+            $this->addNotAllowedSenderPattern($blacklistDefinitionString);
         }
     }
 
@@ -196,6 +199,7 @@ class ReleaseEmailCommand extends Command
      */
     private function addAllowedSenderPatternsFromString(string $whiteListDefinitionString): void
     {
+        $this->getLogger()->debug("Processing whitelist entry $whiteListDefinitionString");
         if (is_readable($whiteListDefinitionString)) {
             $this->getLogger()->debug("Reading whitelist from '".realpath($whiteListDefinitionString)."'");
             $this->addAllowedSenderPatternsFromFile($whiteListDefinitionString);
