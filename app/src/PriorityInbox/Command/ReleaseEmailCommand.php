@@ -147,7 +147,7 @@ class ReleaseEmailCommand extends Command
     {
         $this->getLogger()->debug("Processing blacklist entry $blacklistEntry");
         if (is_readable($blacklistEntry)) {
-            $this->getLogger()->debug("Reading blacklist from file '$blacklistEntry'");
+            $this->getLogger()->debug("Reading blacklist from file '".realpath($blacklistEntry)."'");
             $this->addNotAllowedSenderPatternsFromFile($blacklistEntry);
         } else {
             $this->addNotAllowedSenderPattern($blacklistEntry);
