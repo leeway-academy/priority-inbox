@@ -15,8 +15,8 @@ class EmailPriorityMoverShould extends TestCase
     private EmailRepository $emailRepository;
     private EmailPriorityMover $emailPriorityMover;
     private LoggerInterface $logger;
-    private $inboxLabel;
-    private $hiddenLabel;
+    private Label $inboxLabel;
+    private Label $hiddenLabel;
 
     /**
      * @test
