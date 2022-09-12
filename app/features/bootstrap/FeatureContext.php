@@ -2,6 +2,7 @@
 
 use Behat\Behat\Context\Context;
 use Behat\Hook\BeforeScenario;
+use Behat\Hook\BeforeFeature;
 use PriorityInbox\{Command\ReleaseEmailCommand, Email, EmailId, Label, Sender};
 use Symfony\Component\Console\Exception\ExceptionInterface;
 use Symfony\Component\Console\Input\StringInput;
@@ -16,7 +17,6 @@ class FeatureContext implements Context
 {
     private EmailRepositoryStub $emailRepository;
     private string $hiddenLabelId;
-    private string $tempDirectory;
 
     /**
      * Initializes context.
@@ -28,7 +28,6 @@ class FeatureContext implements Context
     public function __construct()
     {
         $this->emailRepository = $this->buildEmailRepository();
-        $this->tempDirectory = __DIR__ . '/temp/';
     }
 
     /**
@@ -97,9 +96,17 @@ class FeatureContext implements Context
      */
     public function theFileContains(string $filename, string $text)
     {
-        $filename = $this->tempDirectory.'/'.$filename;
+        if (is_readable($filename)) {
+            $contents = file($filename);
 
-        file_put_contents($filename, (file_exists($filename) ? file_get_contents($filename) . PHP_EOL : '') . $text);
+            if (!in_array($text.PHP_EOL, $contents)) {
+                $contents[] = $text.PHP_EOL;
+            }
+        } else {
+            $contents = [$text.PHP_EOL];
+        }
+
+        file_put_contents($filename, $contents);
     }
 
     /**
@@ -108,12 +115,5 @@ class FeatureContext implements Context
     public function initEmailRepository()
     {
         $this->emailRepository->setEmails([]);
-    }
-
-    public function initTempDir()
-    {
-        foreach (dir($this->tempDirectory) as $file) {
-            unlink($file);
-        }
     }
 }
