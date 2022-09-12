@@ -1,6 +1,7 @@
 <?php
 
 use Behat\Behat\Context\Context;
+use Behat\Hook\BeforeScenario;
 use PriorityInbox\{Command\ReleaseEmailCommand, Email, EmailId, Label, Sender};
 use Symfony\Component\Console\Exception\ExceptionInterface;
 use Symfony\Component\Console\Input\StringInput;
@@ -14,11 +15,8 @@ use function PHPUnit\Framework\assertNotContainsEquals;
 class FeatureContext implements Context
 {
     private EmailRepositoryStub $emailRepository;
-    /**
-     * @var array <Email>
-     */
-    private array $options;
-    private $hiddenLabelId;
+    private string $hiddenLabelId;
+    private string $tempDirectory;
 
     /**
      * Initializes context.
@@ -30,6 +28,7 @@ class FeatureContext implements Context
     public function __construct()
     {
         $this->emailRepository = $this->buildEmailRepository();
+        $this->tempDirectory = __DIR__ . '/temp/';
     }
 
     /**
@@ -59,7 +58,7 @@ class FeatureContext implements Context
         $theCommand = new ReleaseEmailCommand($this->emailRepository);
         $theCommand->addOption('verbose', 'v');
         $output = new BufferedOutput();
-        $invocationArguments = $this->hiddenLabelId." ".$invocationArguments;
+        $invocationArguments = $this->hiddenLabelId . " " . $invocationArguments;
         $theCommand->run(new StringInput($invocationArguments), $output);
     }
 
@@ -88,7 +87,7 @@ class FeatureContext implements Context
     /**
      * @return EmailRepositoryStub
      */
-    private function buildEmailRepository() : EmailRepositoryStub
+    private function buildEmailRepository(): EmailRepositoryStub
     {
         return new EmailRepositoryStub();
     }
@@ -98,6 +97,23 @@ class FeatureContext implements Context
      */
     public function theFileContains(string $filename, string $text)
     {
-        file_put_contents($filename, (file_exists($filename) ? file_get_contents($filename).PHP_EOL : '').$text );
+        $filename = $this->tempDirectory.'/'.$filename;
+
+        file_put_contents($filename, (file_exists($filename) ? file_get_contents($filename) . PHP_EOL : '') . $text);
+    }
+
+    /**
+     * @BeforeScenario
+     */
+    public function initEmailRepository()
+    {
+        $this->emailRepository->setEmails([]);
+    }
+
+    public function initTempDir()
+    {
+        foreach (dir($this->tempDirectory) as $file) {
+            unlink($file);
+        }
     }
 }
