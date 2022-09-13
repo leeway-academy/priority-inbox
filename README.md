@@ -4,24 +4,41 @@ Decide for yourself who gets your attention over email at any given time.
 
 This script (together with a few usefull cronjobs) allows you to automatically triage email.
 
-Currently it supports three levels:
-
-* Urgent emails: these will show up in your inbox as soon as they arrive 24x7x365
-* Important emails: these will show up in your inbox as soon as they arrive but only during business hours
-* Rest of the world: these will show up in your inbox just once a day
-
 The script is designed around [php Gmail API](https://developers.google.com/gmail/api/v1/reference/).
 
 # Requirements
 
-* PHP 5.4+
+* PHP 8.1+
 * [Composer](https://getcomposer.org)
+* [MailParse](https://www.php.net/manual/es/book.mailparse.php)
 
-## Setup
+Alternatively the script can be used on top of [Docker](https://www.docker.com/).
+
+# How it works
+
+Every time the script runs it will go through the emails with the designated label. For each one, it will check whether:
+
+1. The sender address matches an allowed pattern
+2. The sender address doesn't match a not allowed pattern
+3. The send date and time is prior to the established minimum
+
+In practice this allows you to create sender's whitelists and blacklists, depending on your particular needs.
+
+## Patterns
+
+The patterns for matching email addresses are simple strings, the checks are based on inclusion.
+
+<u>Examples</u>:
+
+* Pattern `@gmail.com` matches `john@gmail.com` and `maria@gmail.com.ar` but doesn't match `pete@gmail.es`
+* Pattern `willy.sanders` matches `willy.sanders@gmail.com` and `willy.sanders@hotmail.com` but doesn't match `willy@sanders.com`
+* Pattern `Mauro Chojrin` matches `Mauro Chojrin <mauro.chojrin@leewayweb.com>` and `Mauro Chojrin <mchojrin@leewayweb.com>` but doesn't match `Mauro Uriel Chojrin <mauro.chojrin@leewayweb.com>`
+
+# Setup
 
 The setup is a two faces process:
 
-Face 1: Configure your gmail for cli access
+Face 1: Configure your gmail for CLI access
 ===========================================
 
 1. Create your client on your Gmail account (Go [here](https://developers.google.com/gmail/api/quickstart/php) to get it)
@@ -32,42 +49,54 @@ Face 2: Set up your server to interact with gmail
 =================================================
 
 1. Install dependencies through composer (```composer install```)
-2. Run ```php fetch.php```
-3. Follow instructions as they appear :)
  
 Face 3: Configure your environment
 ==================================
 
-1. Copy the file ```important_senders.php.dist``` into ```important_senders.php```
-2. Copy the file ```urgent_senders.php.dist``` into ```urgent_senders.php```
-3. Copy the file ```hidden_label_prefix.php.dist``` into ```hidden_label_prefix.php```
-4. Edit the files appropriately in order to define who/when gets access to your inbox.
-5. Create a new label in your gmail with the same name as reads in your ```hidden_label_prefix.php``` file
-6. Create a filter in your gmail account that:
-    1. Matches: ```from:(*) label:inbox```
-    2. Do this: Skip Inbox, Apply label "(Contents of ```hidden_label_prefix.php```)"
+1. Create a filter in your gmail account with the following specification:
+   1. **Matches**: ```from:(*) label:inbox```
+   2. **Do this**: Skip Inbox, Apply label "`$HIDDEN_LABEL_PREFIX`"
+1. Copy the file `app/.env.example` into `app/.env` and edit to match your own environment.
 
 ## Usage
 
-In order to use the application you need to issue at least one of the following modifiers:
+In the following subscections you'll learn specific uses of the script but the real power of the application comes from combining them together.
 
-* a: Pop email for every possible sender (```php fetch.php -a```)
-* u: Fetch emails sent by people in urgent_senders.php (```php fetch.php -u```)
-* i: Fetch emails sent by people in important_senders.php (```php fetch.php -i```)
-* s: Fetch emails from this particular sender (```php fetch.php -s mauro.chojrin@leewayweb.com```)
-* m: Fetch emails sent within more than X hours from now, to be used together with -a (```php fetch.php -am 5```)
+### Getting all emails
+
+The easiest way to use the script is without any parameter (```php app/fetch.php```). In this case every email labeled `$HIDDEN_LABEL_PREFIX` will be moved to the inbox.
+
+### Limiting by sending time
+
+To limit the emails moved to the inbox to those sent within a specific timeframe you can use the `-m` modifier together with a number. This number establishes the minimum number of hours before the current time to use as threshold.
+
+For instance, if you only want to bring to your inbox those emails sent at most three hours ago you can run ```php app/fetch.php -m 3```. In this case, any email sent after now minus three hours will be kept hidden.
+
+### Allowing emails from certain senders
+
+In case you want to allow emails from specific senders to reach your inbox you can use the `-w` modifier. This modifier takes an argument which can be a pattern or the path to a text file containing one pattern per line.
+
+For instance, say you only want to get emails from your co-workers, you could use the following: ```php app/fetch.php -w @yourcompany.com```.
+
+### Disallowing emails from certain senders
+
+In case you want to allow emails from specific senders to not reach your inbox you can use the `-b` modifier. This modifier takes an argument which can be a pattern or the path to a text file containing one pattern per line.
+
+For instance, say you don't want to get emails from your co-workers, you could use the following: ```php app/fetch.php -b @yourcompany.com```.
 
 Setup your cronjobs
 ===================
 
-While this script can be used on Windows (in theory at least :p), I'm more familiar with Linux, so here's what you need to put in your crontab:
+While this script can be used on Windows (in theory at least :p), I'm more familiar with Linux, so here's a few examples of what you could put in your crontab:
 
+`# Every ten minutes get urgent emails`
+```*/10 * * * * /usr/bin/php /path/to/priority-inbox/app/fetch.php -w urgent_senders.txt```
 
-```*/10 * * * * /usr/bin/php /root/inbox-pause/fetch.php -u```
+`# From Monday through Friday every half hour between 10 and 17 get emails from your coworkers and friends given they were sent at least two hours ago`
+```*/30 10-17 * * 1-5 /usr/bin/php /path/to/priority-inbox/app/fetch.php -w @mycompany.com -w friends.txt -m 2```
 
-```*/10 10-17 * * 1-5 /usr/bin/php /root/inbox-pause/fetch.php -i```
-
-```0 11-16 * * 1-5 /usr/bin/php /root/inbox-pause/fetch.php -am 5```
+`# During the weekends at 11 and 16 get emails from your everyone but your coworkers given they were sent at least three hours ago`
+```0 11-16 * * 6-7 /usr/bin/php /path/to/priority-inbox/app/fetch.php -m 3 -b @mycompany.com```
 
 (This is just a sample configuration, you can tweak it to fit your particular needs)
 
