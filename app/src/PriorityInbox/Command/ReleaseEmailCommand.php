@@ -21,7 +21,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 class ReleaseEmailCommand extends Command
 {
     private EmailPriorityMover $emailPriorityMover;
-    private NullLogger|ConsoleLogger $logger;
+    private LoggerInterface $logger;
     private EmailRepository $emailRepository;
 
     public function __construct(EmailRepository $emailRepository, string $name = null)
@@ -47,9 +47,6 @@ class ReleaseEmailCommand extends Command
             ->addOption("minimum-delay", "m", InputOption::VALUE_REQUIRED, "How many hours must have since emails were sent", 0)
             ->addOption("dry-run", "d", InputOption::VALUE_NONE, "Simulate move")
             ->addArgument("hidden-label-id", InputArgument::REQUIRED, "Id of the label used to hide emails")
-//            ->addArgument("application-name", InputArgument::REQUIRED, "Gmail application name")
-//            ->addArgument("client-secret-path", InputArgument::REQUIRED, "Path to json file where Gmail client secrets are stored")
-//            ->addArgument("client-credentials-path", InputArgument::REQUIRED, "Path to where the access token is to be stored")
         ;
     }
 
