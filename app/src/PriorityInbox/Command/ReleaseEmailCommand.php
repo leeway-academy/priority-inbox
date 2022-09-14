@@ -59,7 +59,6 @@ class ReleaseEmailCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->setupLogger($input->getOption('verbose'), $output);
-        $this->getLogger()->info("Fetching emails in OOP way!");
         $this->setupEmailMover($input);
         $this->fillInbox();
 
@@ -96,7 +95,8 @@ class ReleaseEmailCommand extends Command
     {
         $this
             ->getLogger()
-            ->info("Starting email moving");
+            ->info("Starting email moving: {date}", [ 'date' => date('Y-m-d H:i:s')]);
+
         $this
             ->getEmailPriorityMover()
             ->fillInbox();
