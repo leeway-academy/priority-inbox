@@ -16,6 +16,8 @@ use PriorityInbox\Sender;
 
 class GmailRepository implements EmailRepository
 {
+    const GMAIL_SENT = "SENT";
+
     private GmailDAO $gmail;
 
     private Parser $parser;
@@ -101,7 +103,7 @@ class GmailRepository implements EmailRepository
         $emailUpdate = new EmailUpdate();
 
         $emailUpdate
-            ->setAddedLabels($email->addedLabels())
+            ->setAddedLabels(array_filter($email->addedLabels(), fn(Label $label) => $label->id() !== self::GMAIL_SENT))
             ->setRemovedLabels($email->removedLabels())
         ;
 
