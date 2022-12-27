@@ -4,15 +4,15 @@ build:
 	docker build -t $(image_name) .
 
 install-vim:
-	docker run $(image_name) apk add vim
+	docker run --network=host $(image_name) apk add vim
 
 composer-install:
-	docker run -v $(shell pwd)/app/:/app/:rw $(image_name) composer install
+	docker run --network=host -v $(shell pwd)/app/:/app/:rw $(image_name) composer install
 
 build-dev: build composer-install install-vim
 
 build-prod: build
-	docker run -v $(shell pwd)/app/:/app/:rw $(image_name) composer install --no-dev --no-interaction --optimize-autoloader --prefer-dist
+	docker run --network=host -v $(shell pwd)/app/:/app/:rw $(image_name) composer install --no-dev --no-interaction --optimize-autoloader --prefer-dist
 
 test: 
 	docker run -v $(shell pwd)/app/:/app/:rw $(image_name) composer run-script test
@@ -30,4 +30,4 @@ behat:
 	docker run -v $(shell pwd)/app/:/app/:rw $(image_name) composer run-script behat
 
 sh:
-	docker run -it -v $(shell pwd)/app/:/app/:rw $(image_name) sh
+	docker run --network=host -it -v $(shell pwd)/app/:/app/:rw $(image_name) sh
