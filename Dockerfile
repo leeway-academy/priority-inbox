@@ -1,7 +1,7 @@
 FROM jitesoft/php:8.1-cli AS base_img
 
 RUN apk update && apk upgrade \
-    && apk add
+    && apk add git
 
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 
