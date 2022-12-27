@@ -1,10 +1,10 @@
-# gmail-pirority-inbox
+# Priority Inbox
 
 Decide for yourself who gets your attention over email at any given time.
 
 This script (together with a few usefull cronjobs) allows you to automatically triage email.
 
-The script is designed around [php Gmail API](https://developers.google.com/gmail/api/v1/reference/).
+The script is designed around [php Gmail API](https://developers.google.com/gmail/api/v1/reference/) but extending for other APIs should be easy. 
 
 # Requirements
 
