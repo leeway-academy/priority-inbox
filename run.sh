@@ -1,3 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
-docker run -v $(pwd)/app:/app/:rw gmail-priority-inbox php run.php -vvv $@
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+docker run -v $SCRIPT_DIR/app:/app/:rw gmail-priority-inbox php run.php -vvv $@
