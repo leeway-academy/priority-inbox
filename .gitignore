@@ -6,7 +6,7 @@ app/vendor/
 hidden_label_prefix.php
 .idea/
 *.txt
-*.log
+*.log*
 .env
 app/token.json
 /app/.phpunit.result.cache
