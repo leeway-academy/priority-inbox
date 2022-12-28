@@ -45,6 +45,7 @@ jobs:
     steps:
     - name: Deploy new version
       uses: appleboy/ssh-action@master
+      timeout-minutes: 30
       with:
         host: ${{ secrets.SSH_HOST }}
         key: ${{ secrets.SSH_KEY }}
