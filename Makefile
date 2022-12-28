@@ -1,7 +1,7 @@
 image_name=gmail-priority-inbox
 
 build:
-	docker build -t $(image_name) .
+	docker build --network=host -t $(image_name) .
 
 install-vim:
 	docker run --network=host $(image_name) apk add vim
