@@ -2,6 +2,7 @@
 
 use PriorityInbox\Email;
 use PriorityInbox\EmailRepository;
+use Psr\Log\LoggerInterface;
 
 class EmailRepositoryStub implements EmailRepository
 {
@@ -9,6 +10,8 @@ class EmailRepositoryStub implements EmailRepository
      * @var array<Email>
      */
     private array $emails;
+
+    private LoggerInterface $logger;
 
     /**
      * @param Email $email
@@ -64,5 +67,12 @@ class EmailRepositoryStub implements EmailRepository
     public function getEmail(string $emailId): Email
     {
         return $this->emails[$emailId];
+    }
+
+    public function setLogger(LoggerInterface $logger): self
+    {
+        $this->logger = $logger;
+
+        return $this;
     }
 }
