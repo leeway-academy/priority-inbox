@@ -1,4 +1,4 @@
-name: Build and Deploy the application
+name: Build and Deploy
 
 on:
   push:
@@ -6,52 +6,42 @@ on:
   pull_request:
     branches: [ "master" ]
 
-permissions:
-  contents: read
-
 jobs:
-  build:
-
-    runs-on: ubuntu-22.04    
-
+  test:
+    runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
-    - name: Validate composer.json and composer.lock
+    - name: Validate composer.json
       run: cd app && composer validate --strict
 
-    - name: Install mailparse extension
-      run: sudo apt install php-mailparse
+    # Usamos Docker para los tests para asegurar paridad con producción
+    - name: Build Docker Image for Testing
+      run: make build
 
-    - name: Cache Composer packages
-      id: composer-cache
-      uses: actions/cache@v3
-      with:
-        path: app/vendor
-        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-php-
+    - name: Install Dependencies
+      run: make composer-install
 
-    - name: Install dependencies
-      run: cd app && composer install --prefer-dist --no-progress
+    - name: Run Tests
+      run: make test
 
-    - name: Run test suite
-      run: cd app && composer run-script test
-  
+    - name: Run Static Analysis (PHPStan)
+      run: make phpstan
+
   deploy:
-
-    runs-on: ubuntu-22.04
-    
-    timeout-minutes: 30
+    needs: test # Solo despliega si los tests pasan
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
     
     steps:
-    - name: Deploy new version
-      uses: appleboy/ssh-action@master
+    - name: Deploy via SSH
+      uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
         key: ${{ secrets.SSH_KEY }}
-        username: ${{ secrets.SSH_USER }} 
+        port: ${{ secrets.SSH_PORT || 22 }}
         script: |
           cd ${{ secrets.APP_HOME }}
-          git pull
+          git pull origin master
           make build-prod
