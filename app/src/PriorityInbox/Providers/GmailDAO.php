@@ -8,6 +8,8 @@ use Google\Service\Gmail\ModifyMessageRequest;
 use Google\Service\Gmail\Resource\UsersMessages;
 use PriorityInbox\EmailFilter;
 use PriorityInbox\EmailUpdate;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 class GmailDAO
 {
@@ -15,6 +17,7 @@ class GmailDAO
     public const FORMAT_KEY = 'format';
     public const FORMAT_RAW = 'raw';
     private Gmail $gmail;
+    private LoggerInterface $logger;
 
     /**
      * @param Gmail $gmail
@@ -22,6 +25,7 @@ class GmailDAO
     public function __construct(Gmail $gmail)
     {
         $this->gmail = $gmail;
+        $this->setLogger(new NullLogger());
     }
 
     /**
@@ -30,6 +34,10 @@ class GmailDAO
      */
     public function getFilteredMessageList(array $filters = []): array
     {
+        $this
+            ->getLogger()
+            ->debug("Getting filtered emails from Gmail applying filters: ".print_r($filters, 1));
+
         $retrievedMessages = $this
             ->getUserMessages()
             ->listUsersMessages(self::GMAIL_USER, current(array_map(fn (EmailFilter $filter) => $filter->getExpression(), $filters)))
@@ -91,5 +99,17 @@ class GmailDAO
         $modifyMessageRequest->setRemoveLabelIds($update->removeLabelIds());
 
         return $modifyMessageRequest;
+    }
+
+    public function setLogger(LoggerInterface $logger) : self 
+    {
+        $this->logger = $logger;
+
+        return $this;
+    }
+
+    protected function getLogger(): LoggerInterface
+    {
+        return $this->logger;
     }
 }

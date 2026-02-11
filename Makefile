@@ -1,33 +1,42 @@
-image_name=gmail-priority-inbox
+# Variables
+IMAGE_NAME := gmail-priority-inbox
+PWD := $(shell pwd)
+VOLUMES := -v $(PWD)/app:/app:rw
+DOCKER_RUN := docker run --rm --network=host $(VOLUMES) $(IMAGE_NAME)
+
+.PHONY: build install-vim composer-install build-dev build-prod test cs-fix composer-update phpstan behat sh run-app
 
 build:
-	docker build --network=host -t $(image_name) .
+	docker build --network=host -t $(IMAGE_NAME) .
 
 install-vim:
-	docker run --network=host $(image_name) apk add vim
+	$(DOCKER_RUN) apk add vim
 
 composer-install:
-	docker run --network=host -v $(shell pwd)/app/:/app/:rw $(image_name) composer install
+	$(DOCKER_RUN) composer install
 
 build-dev: build composer-install install-vim
 
 build-prod: build
-	docker run --network=host -v $(shell pwd)/app/:/app/:rw $(image_name) composer install --no-dev --no-interaction --optimize-autoloader --prefer-dist
+	$(DOCKER_RUN) composer install --no-dev --no-interaction --optimize-autoloader --prefer-dist
 
 test: 
-	docker run -v $(shell pwd)/app/:/app/:rw $(image_name) composer run-script test
+	$(DOCKER_RUN) composer run-script test
 
 cs-fix: 
-	docker run -v $(shell pwd)/app/:/app/:rw $(image_name) composer run-script cs-fix
+	$(DOCKER_RUN) composer run-script cs-fix
 
 composer-update:
-	docker run -v $(shell pwd)/app/:/app/:rw $(image_name) composer update
+	$(DOCKER_RUN) composer update
 
 phpstan:
-	docker run -v $(shell pwd)/app/:/app/:rw $(image_name) composer run-script phpstan
+	$(DOCKER_RUN) composer run-script phpstan
 
 behat:
-	docker run -v $(shell pwd)/app/:/app/:rw $(image_name) composer run-script behat
+	$(DOCKER_RUN) composer run-script behat
 
 sh:
-	docker run --network=host -it -v $(shell pwd)/app/:/app/:rw $(image_name) sh
+	docker run --rm -it --network=host $(VOLUMES) $(IMAGE_NAME) sh
+
+run-app:
+	$(DOCKER_RUN) php run.php -vvv $(ARGS)

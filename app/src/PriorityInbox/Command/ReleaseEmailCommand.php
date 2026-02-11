@@ -213,6 +213,7 @@ class ReleaseEmailCommand extends Command
     private function setupLogger(bool $verbose, OutputInterface $output): void
     {
         $this->logger = $verbose ? new ConsoleLogger($output) : new NullLogger();
+        $this->emailRepository->setLogger($this->logger);
     }
 
     /**

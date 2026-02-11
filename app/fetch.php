@@ -30,7 +30,7 @@ if (!empty($notAllowedFrom)) {
 
 try {
     $gmailService = buildGmailService();
-} catch (\Google\Exception $e) {
+} catch (Google\Exception $e) {
     die($e->getMessage());
 }
 list($hiddenLabelId, $hiddenLabelName) = getHiddenLabelInformation();
@@ -163,7 +163,7 @@ function moveToInbox(GmailMessage $message, Google_Service_Gmail $service, strin
 function senderBelongs(array $importantSenders, string $from): bool
 {
     return count(
-        array_filter($importantSenders, fn (string $sender) => $sender && (str_contains(strtolower($from), $sender)))
+        array_filter($importantSenders, fn(string $sender) => $sender && (str_contains(strtolower($from), $sender)))
     ) > 0;
 }
 
@@ -324,7 +324,7 @@ function getHiddenMessages(GmailService $gmailService, mixed $hiddenLabelId): ar
         ->users_messages
         ->listUsersMessages('me', [
             'labelIds' =>
-                [$hiddenLabelId]
+            [$hiddenLabelId]
         ]);
 
     return $results->getMessages();
@@ -407,5 +407,5 @@ function getCLIOptions(): array|false
  */
 function logMessage(string $message): void
 {
-    echo date('Y-m-d H:i:s') . " fetch.php" . PHP_EOL;
+    echo "[" . __FILE__ . "]" . date('Y-m-d H:i:s') . ": $message" . PHP_EOL;
 }

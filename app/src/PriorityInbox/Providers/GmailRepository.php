@@ -13,14 +13,16 @@ use PriorityInbox\EmailRepository;
 use PriorityInbox\EmailUpdate;
 use PriorityInbox\Label;
 use PriorityInbox\Sender;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 class GmailRepository implements EmailRepository
 {
     const GMAIL_SENT = "SENT";
 
     private GmailDAO $gmail;
-
     private Parser $parser;
+    private LoggerInterface $logger;
 
     /**
      * @param GmailDAO $gmail
@@ -30,6 +32,7 @@ class GmailRepository implements EmailRepository
     {
         $this->gmail = $gmail;
         $this->parser = $parser;
+        $this->logger = new NullLogger();
     }
 
     /**
@@ -38,6 +41,10 @@ class GmailRepository implements EmailRepository
      */
     public function fetch(array $filters = []): array
     {
+        $this
+            ->getLogger()
+            ->debug("Fetching emails from Gmail");
+
         $emails = [];
 
         foreach ($this->getGmailMessages($filters) as $message) {
@@ -89,6 +96,10 @@ class GmailRepository implements EmailRepository
      */
     private function getGmailMessages(array $filters = []): array
     {
+        $this
+            ->getLogger()
+            ->debug("Getting filtered emails from Gmail");
+
         return $this
             ->gmail
             ->getFilteredMessageList($filters);
@@ -174,5 +185,18 @@ class GmailRepository implements EmailRepository
     protected function getGmail(): GmailDAO
     {
         return $this->gmail;
+    }
+
+    protected function getLogger(): LoggerInterface
+    {
+        return $this->logger;
+    }
+
+    public function setLogger(LoggerInterface $logger): self
+    {
+        $this->logger = $logger;
+        $this->gmail->setLogger($logger);
+
+        return $this;
     }
 }

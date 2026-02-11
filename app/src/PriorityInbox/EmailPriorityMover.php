@@ -110,6 +110,10 @@ class EmailPriorityMover
      */
     private function fetchHiddenEmails(): array
     {
+        $this
+            ->getLogger()
+            ->debug("Fetching hidden emails");
+
         return $this
             ->fetchEmailsLabeled(
                 $this->getHiddenLabel()
@@ -130,6 +134,11 @@ class EmailPriorityMover
      */
     private function fetchEmailsLabeled(Label $label): array
     {
+        $this
+            ->getLogger()
+            ->debug("Fetching emails labeled ".$label->id())
+            ;
+            
         return $this
             ->getEmailRepository()
             ->fetch([new LabelFilter($label)]);

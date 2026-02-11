@@ -1,9 +1,16 @@
 <?php
 
+require_once 'vendor/autoload.php';
+
+use Google\Client as GoogleClient;
+use Google\Service\Gmail;
+
+loadEnvironmentVariables();
+
 $client = new GoogleClient();
-$client->setApplicationName($applicationName);
-$client->setScopes($scopes);
-$client->setAuthConfig($clientSecretPath);
+$client->setApplicationName($_ENV['APPLICATION_NAME']);
+$client->setScopes([Gmail::GMAIL_MODIFY]);
+$client->setAuthConfig($_ENV['CLIENT_SECRET_PATH']);
 $client->setAccessType('offline');
 
 // Load previously authorized credentials from a file.
@@ -24,3 +31,9 @@ if (!file_exists(dirname($credentialsPath))) {
 }
 file_put_contents($credentialsPath, json_encode($accessToken));
 printf("Credentials saved to %s\n", $credentialsPath);
+
+function loadEnvironmentVariables(): void
+{
+    $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+    $dotenv->load();
+}
