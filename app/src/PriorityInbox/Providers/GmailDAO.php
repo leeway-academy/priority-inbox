@@ -36,7 +36,7 @@ class GmailDAO
     {
         $this
             ->getLogger()
-            ->debug("Getting filtered emails from Gmail applying filters: ".print_r($filters, 1));
+            ->debug("Getting filtered emails from Gmail applying filters: ".print_r($filters, true));
 
         $retrievedMessages = $this
             ->getUserMessages()
