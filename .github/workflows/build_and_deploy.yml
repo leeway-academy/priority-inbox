@@ -1,50 +1,44 @@
-name: Build and Deploy (Direct Transfer)
+name: Build, Test and Deploy
 
 on:
   push:
     branches: [ "master" ]
 
 jobs:
-  build-and-deploy:
+  test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Build Docker Image for Testing
+        run: docker build -t gmail-priority-inbox:test .
 
-      - name: Build and Export Image
+      - name: Run Tests inside Docker
+        # Ejecutamos el comando de test que ya tenés en el composer
+        run: docker run --rm gmail-priority-inbox:test composer run-script test
+
+  deploy:
+    needs: test # <--- Esta es la dependencia clave
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build and Export Production Image
         run: |
-          # Construimos la imagen y la guardamos como un archivo .tar
           docker build -t gmail-priority-inbox:latest .
           docker save gmail-priority-inbox:latest > image.tar
 
-      - name: Transfer and Load Image via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          # Pasamos el archivo por el túnel SSH y lo cargamos
-          script_stop: true
-          envs: GITHUB_SHA
-          script: |
-            # Limpiamos imágenes viejas para no llenar el disco (opcional)
-            docker image prune -f
-          # Usamos el parámetro 'sync' o cargamos el archivo directamente
-          # Para enviar archivos grandes, el plugin appleboy permite 'scp'
-          # Pero aquí lo haremos inyectando el stream por pipe para máxima elegancia:
-      
-      - name: Copy image via SCP
+      - name: Copy image to Server via SCP
         run: |
-          # Guardamos la clave privada en un archivo temporal para scp
           echo "${{ secrets.SSH_KEY }}" > private_key.pem
           chmod 600 private_key.pem
-          # Enviamos el archivo .tar al servidor
           scp -i private_key.pem -o StrictHostKeyChecking=no image.tar ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/tmp/image.tar
 
-      - name: Load image on Server
+      - name: Load image and Clean up
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -53,4 +47,5 @@ jobs:
           script: |
             docker load < /tmp/image.tar
             rm /tmp/image.tar
-            echo "Imagen actualizada correctamente"
+            # Opcional: docker system prune -f (para limpiar imágenes huérfanas)
+            echo "Despliegue finalizado con éxito"
