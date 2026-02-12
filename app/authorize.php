@@ -8,13 +8,13 @@ use Google\Service\Gmail;
 loadEnvironmentVariables();
 
 $client = new GoogleClient();
-$client->setApplicationName($_ENV['APPLICATION_NAME']);
+$client->setApplicationName($argv[1] ?? $_ENV['APPLICATION_NAME']);
 $client->setScopes([Gmail::GMAIL_MODIFY]);
-$client->setAuthConfig($_ENV['CLIENT_SECRET_PATH']);
+$client->setAuthConfig($argv[2] ?? $_ENV['CLIENT_SECRET_PATH']);
 $client->setAccessType('offline');
 
 // Load previously authorized credentials from a file.
-$credentialsPath = __DIR__ . '/token.json';
+$credentialsPath = ($argv[3] ?? __DIR__) . '/token.json';
 
 // Request authorization from the user.
 $authUrl = $client->createAuthUrl();
