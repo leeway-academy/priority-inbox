@@ -12,7 +12,8 @@
     "psr-4": {
       "PriorityInbox\\": "src/PriorityInbox/",
       "PriorityInbox\\Command\\": "src/PriorityInbox/Command/",
-      "PriorityInbox\\Providers\\": "src/PriorityInbox/Providers"
+      "PriorityInbox\\Providers\\": "src/PriorityInbox/Providers",
+      "PriorityInbox\\Log\\": "src/PriorityInbox/Log"
     }
   },
   "require": {

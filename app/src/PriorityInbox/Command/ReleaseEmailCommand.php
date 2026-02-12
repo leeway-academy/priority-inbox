@@ -7,6 +7,7 @@ use PriorityInbox\EmailPriorityMover;
 use PriorityInbox\EmailRepository;
 use PriorityInbox\Label;
 use PriorityInbox\SenderPattern;
+use PriorityInbox\Log\TimestampConsoleLogger;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -212,7 +213,7 @@ class ReleaseEmailCommand extends Command
      */
     private function setupLogger(bool $verbose, OutputInterface $output): void
     {
-        $this->logger = $verbose ? new ConsoleLogger($output) : new NullLogger();
+        $this->logger = new TimestampConsoleLogger($verbose ? new ConsoleLogger($output) : new NullLogger());
         $this->emailRepository->setLogger($this->logger);
     }
 
