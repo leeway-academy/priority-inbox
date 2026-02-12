@@ -29,7 +29,7 @@ jobs:
 
       - name: Build and Export Production Image
         run: |
-          run: docker build --target prod -t gmail-priority-inbox:latest .
+          docker build --target prod -t gmail-priority-inbox:latest .
           docker save gmail-priority-inbox:latest > image.tar
 
       - name: Copy image to Server via SCP
