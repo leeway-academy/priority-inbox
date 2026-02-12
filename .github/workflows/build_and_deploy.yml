@@ -12,7 +12,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build Docker Image for Testing
-        run: docker build -t gmail-priority-inbox:test .
+        run: docker build --target dev -t gmail-priority-inbox:test .
 
       - name: Run Tests inside Docker
         # Ejecutamos el comando de test que ya tenés en el composer
@@ -29,7 +29,7 @@ jobs:
 
       - name: Build and Export Production Image
         run: |
-          docker build -t gmail-priority-inbox:latest .
+          run: docker build --target prod -t gmail-priority-inbox:latest .
           docker save gmail-priority-inbox:latest > image.tar
 
       - name: Copy image to Server via SCP
