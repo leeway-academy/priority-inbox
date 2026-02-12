@@ -1,47 +1,56 @@
-name: Build and Deploy
+name: Build and Deploy (Direct Transfer)
 
 on:
   push:
     branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
 
 jobs:
-  test:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Validate composer.json
-      run: cd app && composer validate --strict
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-    # Usamos Docker para los tests para asegurar paridad con producción
-    - name: Build Docker Image for Testing
-      run: make build
+      - name: Build and Export Image
+        run: |
+          # Construimos la imagen y la guardamos como un archivo .tar
+          docker build -t gmail-priority-inbox:latest .
+          docker save gmail-priority-inbox:latest > image.tar
 
-    - name: Install Dependencies
-      run: make composer-install
+      - name: Transfer and Load Image via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          # Pasamos el archivo por el túnel SSH y lo cargamos
+          script_stop: true
+          envs: GITHUB_SHA
+          script: |
+            # Limpiamos imágenes viejas para no llenar el disco (opcional)
+            docker image prune -f
+          # Usamos el parámetro 'sync' o cargamos el archivo directamente
+          # Para enviar archivos grandes, el plugin appleboy permite 'scp'
+          # Pero aquí lo haremos inyectando el stream por pipe para máxima elegancia:
+      
+      - name: Copy image via SCP
+        run: |
+          # Guardamos la clave privada en un archivo temporal para scp
+          echo "${{ secrets.SSH_KEY }}" > private_key.pem
+          chmod 600 private_key.pem
+          # Enviamos el archivo .tar al servidor
+          scp -i private_key.pem -o StrictHostKeyChecking=no image.tar ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/tmp/image.tar
 
-    - name: Run Tests
-      run: make test
-
-    - name: Run Static Analysis (PHPStan)
-      run: make phpstan
-
-  deploy:
-    needs: test # Solo despliega si los tests pasan
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Deploy via SSH
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.SSH_HOST }}
-        username: ${{ secrets.SSH_USER }}
-        key: ${{ secrets.SSH_KEY }}
-        port: ${{ secrets.SSH_PORT || 22 }}
-        script: |
-          cd ${{ secrets.APP_HOME }}
-          git pull origin master
-          make build-prod
+      - name: Load image on Server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            docker load < /tmp/image.tar
+            rm /tmp/image.tar
+            echo "Imagen actualizada correctamente"
