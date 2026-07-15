@@ -20,12 +20,11 @@ class EmailPriorityMoverShould extends TestCase
 
     /**
      * @test
-     * @param EmailId $emailId
      * @param Sender $sender
      * @dataProvider provideEmailDetails
      * @throws Exception
      */
-    public function respect_white_list(EmailId $emailId, Sender $sender): void
+    public function respect_white_list(Sender $sender): void
     {
         $emailFromAllowedSender = $this->createMock(Email::class);
 
@@ -60,7 +59,7 @@ class EmailPriorityMoverShould extends TestCase
      * @dataProvider provideEmailDetails
      * @throws Exception
      */
-    public function respect_black_list(EmailId $emailId, Sender $sender): void
+    public function respect_black_list(Sender $sender): void
     {
         $inboxLabel = new Label(self::INBOX_LABEL_ID);
         $hiddenLabel = new Label(self::HIDDEN_EMAILS_LABEL_ID);
@@ -257,8 +256,8 @@ class EmailPriorityMoverShould extends TestCase
     public function provideEmailDetails(): array
     {
         return [
-            [new EmailId("1"), new Sender("mchojrin@gmail.com")],
-            [new EmailId("2"), new Sender("maria.pappen@gmail.com")],
+            [new Sender("mchojrin@gmail.com")],
+            [new Sender("maria.pappen@gmail.com")],
         ];
     }
 

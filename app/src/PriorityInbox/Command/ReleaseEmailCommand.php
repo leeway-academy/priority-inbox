@@ -274,14 +274,7 @@ class ReleaseEmailCommand extends Command
     private function setupWhiteList(InputInterface $input): void
     {
         if ($whiteList = $input->getOption('white-list')) {
-            $this
-                ->getLogger()
-                ->info("Allowing emails from: " . implode(", ", $whiteList));
-            if (is_array($whiteList)) {
-                $this->addAllowedSenderPatternsFromArray($whiteList);
-            } else {
-                $this->addAllowedSenderPatternsFromString($whiteList);
-            }
+            $this->addAllowedSenderPatternsFromArray($whiteList);            
         }
     }
 
