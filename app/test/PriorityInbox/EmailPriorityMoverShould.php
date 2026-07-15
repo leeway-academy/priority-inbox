@@ -21,7 +21,7 @@ class EmailPriorityMoverShould extends TestCase
     /**
      * @test
      * @param Sender $sender
-     * @dataProvider provideEmailDetails
+     * @dataProvider provideSenders
      * @throws Exception
      */
     public function respect_white_list(Sender $sender): void
@@ -56,7 +56,7 @@ class EmailPriorityMoverShould extends TestCase
 
     /**
      * @test
-     * @dataProvider provideEmailDetails
+     * @dataProvider provideSenders
      * @throws Exception
      */
     public function respect_black_list(Sender $sender): void
@@ -256,8 +256,8 @@ class EmailPriorityMoverShould extends TestCase
     public function provideEmailDetails(): array
     {
         return [
-            [new Sender("mchojrin@gmail.com")],
-            [new Sender("maria.pappen@gmail.com")],
+            [new EmailId("from-mchojrin"),new Sender("mchojrin@gmail.com")],
+            [new EmailId("from-mpappen"),new Sender("maria.pappen@gmail.com")],
         ];
     }
 
@@ -270,6 +270,14 @@ class EmailPriorityMoverShould extends TestCase
             [1],
             [2],
             [3],
+        ];
+    }
+
+    public function provideSenders(): array
+    {
+        return [
+            [new Sender("mchojrin@gmail.com")],
+            [new Sender("maria.pappen@gmail.com")],
         ];
     }
 
